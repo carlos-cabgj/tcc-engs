@@ -1,0 +1,60 @@
+services:
+  microsservico_1:
+    container_name: app1
+    image: tcc:latest
+    volumes:
+      - ./app:/app # Monta o diretório local no contêiner
+    ports:
+      - "8000:8000" # Expõe a porta do microsserviço
+    working_dir: / # Define o diretório de trabalho
+    environment:
+      - DATABASE_URL_MICROSSERVICO_1=${DATABASE_URL_MICROSSERVICO_1} # URL do banco de dados
+    # command: uvicorn app.main:app --host 0.0.0.0 --port 8080 --reload # Inicia a aplicação com Uvicorn
+    command: python app/manage.py runserver 0.0.0.0:8000
+    # command: tail -f /dev/null # Mantém o contêiner em execução, aguardando comandos
+    depends_on:
+      # rabbitmq:
+      #   condition: service_healthy # Aguarda o RabbitMQ estar saudável antes de iniciar
+      db_microsservico_1:
+        condition: service_started # Aguarda o banco estar iniciado
+    networks:
+      - comunicacao_microsservicos
+  db_microsservico_1:
+    image: postgres:16-alpine
+    container_name: db_microsservico_1
+    volumes:
+      - postgres_volume_1:/var/lib/postgresql/data/
+      - /media/disk_k:K:\
+
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+    ports:
+      - "5433:5432" # Banco separado na porta 5433 para evitar conflito com o outro banco
+    restart: always
+    networks:
+      - comunicacao_microsservicos
+
+  # rabbitmq:
+  #   container_name: rabbitmq
+  #   image: rabbitmq:3-management
+  #   environment:
+  #     - RABBITMQ_DEFAULT_USER=${RABBITMQ_USER} # Usuário do RabbitMQ
+  #     - RABBITMQ_DEFAULT_PASS=${RABBITMQ_PASS} # Senha do RabbitMQ
+  #   ports:
+  #     - "5672:5672" # Porta de comunicação entre serviços
+  #     - "15672:15672" # Interface de gerenciamento do RabbitMQ
+  #   healthcheck:
+  #     test: ["CMD", "rabbitmqctl", "status"] # Verifica se o RabbitMQ está funcionando
+  #     interval: 10s
+  #     timeout: 5s
+  #     retries: 5
+  #   networks:
+  #     - comunicacao_microsservicos
+
+networks:
+  comunicacao_microsservicos:
+
+volumes:
+  postgres_volume_1:

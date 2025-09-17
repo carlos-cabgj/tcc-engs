@@ -1,0 +1,27 @@
+.flex-menu {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    padding: 10px;
+    margin: 10px;
+    list-style: none;
+    justify-content: space-evenly;
+}
+
+.flex-menu li {
+    margin-bottom: 20px;
+    text-align: center;
+    cursor: pointer;
+}
+
+
+/* Adicionar essa regra para dispositivos móveis ou telas pequenas */
+@media (max-width: 568px) {
+    .flex-menu  {
+        flex-direction: column;
+    }
+    .flex-menu li {
+        flex-basis: 100%;
+        margin-right: 0;
+    }
+}

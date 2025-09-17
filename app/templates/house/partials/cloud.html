@@ -1,0 +1,28 @@
+# myapp/views.py
+from django.shortcuts import render
+from taggit.models import Tag # Assuming django-taggit
+
+def tag_cloud_view(request):
+    # Get all tags and their counts
+    tags = Tag.objects.all()
+    tag_data = []
+    max_count = 0
+
+    # Calculate frequency and find max count for normalization
+    for tag in tags:
+        count = tag.taggit_taggeditem_items.count() # Adjust based on your tag model relationship
+        if count > 0:
+            tag_data.append({'name': tag.name, 'count': count})
+            if count > max_count:
+                max_count = count
+
+    # Assign a 'size' based on count (e.g., 1 to 6)
+    # This is a simple linear scaling, more complex algorithms can be used
+    for item in tag_data:
+        if max_count > 0:
+            item['size'] = int((item['count'] / max_count) * 5) + 1 # Sizes 1-6
+        else:
+            item['size'] = 1 # Default size if no tags or max_count is 0
+
+    context = {'tags': tag_data}
+    return render(request, 'myapp/tag_cloud.html', context)

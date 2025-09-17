@@ -1,0 +1,67 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minha Biblioteca Digital</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="stylesheet" href="{% static 'css/header.css' %}">
+    <link rel="stylesheet" href="{% static 'css/menu.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+    <div class="row">
+        {% include "./partials/header.html" %}
+    </div>
+    <div id="main-container" class="row">
+        <div class="container">
+            {% include "./partials/menu.html" %}
+
+            <section class="content-area">
+                <div class="search-bar">
+                    <input type="text" placeholder="Search">
+                    <button><i class="fas fa-search"></i></button>
+                </div>
+            </section>
+            <main class="main-content">
+                <section class="content-area">
+                    <div class="coreshelf">
+                        <h3>Coreshelf 2</h3>
+                        <div class="item-grid">
+                            <div class="item-card">
+                                <img src="https://via.placeholder.com/150x100?text=Botiek" alt="Botiek">
+                                <h4>
+                                    <a href="{% url 'video' %}">
+                                        Botieks
+                                    </a>
+                                </h4>
+                                <p>Ootdgior</p>
+                                <i class="fas fa-check-circle check-icon"></i>
+                            </div>
+                            <div class="item-card">
+                                <img src="https://via.placeholder.com/150x100?text=Sotters" alt="Sotters">
+                                <h4>Sotters</h4>
+                                <p>Thetbelire</p>
+                                <i class="fas fa-plus-circle add-icon"></i>
+                            </div>
+                            <div class="item-card">
+                                <img src="https://via.placeholder.com/150x100?text=Morats" alt="Morats">
+                                <h4>Morats</h4>
+                                <p>Thetfellre</p>
+                                <i class="fas fa-star favorite-icon"></i>
+                            </div>
+                            </div>
+                    </div>
+                </section>
+            {% include "./partials/cloud.html" %}
+            </main>
+
+            <footer class="floating-button">
+                <i class="fas fa-user-circle"></i>
+            </footer>
+        </div>
+    </div>
+</body>
+</html>
