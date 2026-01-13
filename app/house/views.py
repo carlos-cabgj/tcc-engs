@@ -7,6 +7,9 @@ from django.shortcuts import render
 def index(request):
     return HttpResponse("Hello 2")
 
+def auth(request):
+    return HttpResponse("Hello 2")
+
 def main(request):
     context = {'name': 'carlos'}
     return render(request, 'house/main.html', context);

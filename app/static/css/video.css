@@ -1,0 +1,21 @@
+.main-section{
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+}
+
+.video-shelf {
+    width:100%
+}
+
+.search-shelf {
+    float: right;
+}
+.search-input {
+    float: right;
+}
+
+.search-button {
+    float: right;
+}

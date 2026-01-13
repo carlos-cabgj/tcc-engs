@@ -1,33 +1,26 @@
-<VirtualHost *:8000>
+<VirtualHost *:80>
+    ServerName cloudunderroof.com
     ServerAdmin webmaster@localhost
-    DocumentRoot /app
+    DocumentRoot /tcc-engs/app
 
-    Header always set Cache-Control "no-cache, no-store, must-revalidate"
-    Header always set Pragma "no-cache"
-    Header always set Expires "0"
-
-    Alias /static /app/static
-    <Directory /app/static>
+    Alias /static /tcc-engs/app/staticfiles
+    <Directory /tcc-engs/app/staticfiles>
         Require all granted
         Allow from all
     </Directory>
 
-    <Directory /app/cloudunderroof>
+    <Directory /tcc-engs/app/cloudunderroof>
         <Files wsgi.py>
             Require all granted
             Allow from all
         </Files>
     </Directory>
 
-    #WSGIDaemonProcess cloudunderroof python-path=/usr/local python-home=/usr/local/
-    WSGIDaemonProcess cloudunderroof \
-        python-path=/app:/usr/local/lib/python3.13/site-packages \
-        processes=2 threads=5
-
+    WSGIDaemonProcess cloudunderroof python-home=/tcc-engs/app/.venv python-path=/tcc-engs/app/
     WSGIProcessGroup cloudunderroof
-    WSGIScriptAlias / /app/cloudunderroof/wsgi.py
+    #WSGIScriptAlias / /tcc-engs/app/.venv/bin/mod_wsgi-express
+    WSGIScriptAlias / /tcc-engs/app/cloudunderroof/wsgi.py
 
     ErrorLog ${APACHE_LOG_DIR}/cloudunderroof_error.log
     CustomLog ${APACHE_LOG_DIR}/cloudunderroof_access.log combined
 </VirtualHost>
-

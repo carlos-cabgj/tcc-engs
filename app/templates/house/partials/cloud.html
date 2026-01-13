@@ -1,28 +1,43 @@
-# myapp/views.py
-from django.shortcuts import render
-from taggit.models import Tag # Assuming django-taggit
+{% load static %}
+   <section class="content-area main-section">
+        <div class="coreshelf">
+            <video width="640" height="360" controls>
+                <source src="{% static 'videos/1.mp4' %}" type="video/mp4">
+                Seu navegador não suporta a tag de vídeo.
+            </video>
+        </div>
+        <div class="video-shelf">
+            <h3>Prateleira</h3>
+            <div class="search-shelf">
+                <input id="search-field" name="search-field" type="text" placeholder="Pesquisar...">
+                <input id="search-button" value="search" type="button">
+            </div>
+            <div class="item-grid">
+                <div class="item-card">
+                            <a href="/static/videos/1.mp4">
+                    <img src="https://via.placeholder.com/150x100?text=Botiek" alt="Botiek">
+                        </a>
 
-def tag_cloud_view(request):
-    # Get all tags and their counts
-    tags = Tag.objects.all()
-    tag_data = []
-    max_count = 0
-
-    # Calculate frequency and find max count for normalization
-    for tag in tags:
-        count = tag.taggit_taggeditem_items.count() # Adjust based on your tag model relationship
-        if count > 0:
-            tag_data.append({'name': tag.name, 'count': count})
-            if count > max_count:
-                max_count = count
-
-    # Assign a 'size' based on count (e.g., 1 to 6)
-    # This is a simple linear scaling, more complex algorithms can be used
-    for item in tag_data:
-        if max_count > 0:
-            item['size'] = int((item['count'] / max_count) * 5) + 1 # Sizes 1-6
-        else:
-            item['size'] = 1 # Default size if no tags or max_count is 0
-
-    context = {'tags': tag_data}
-    return render(request, 'myapp/tag_cloud.html', context)
+    <h4>
+                            <a href={% static 'videos/1.mp4' %}>
+                            Botieks
+                        </a>
+                    </h4>
+                    <p>Ootdgior</p>
+                    <i class="fas fa-check-circle check-icon"></i>
+                </div>
+                <div class="item-card">
+                    <img src="https://via.placeholder.com/150x100?text=Sotters" alt="Sotters">
+                    <h4>Sotters 999</h4>
+                    <p>Thetbelire</p>
+                    <i class="fas fa-plus-circle add-icon"></i>
+                </div>
+                <div class="item-card">
+                    <img src="https://via.placeholder.com/150x100?text=Morats" alt="Morats">
+                    <h4>Morats</h4>
+                    <p>Thetfellre</p>
+                    <i class="fas fa-star favorite-icon"></i>
+                </div>
+            </div>
+        </div>
+    </section>

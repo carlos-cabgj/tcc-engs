@@ -1,0 +1,9 @@
+django
+django-environ
+mod_wsgi
+psycopg2
+djangorestframework
+djangorestframework-simplejwt
+drf-yasg
+
+
