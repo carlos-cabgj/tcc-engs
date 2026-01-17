@@ -18,7 +18,10 @@
 
     WSGIDaemonProcess cloudunderroof python-home=/tcc-engs/app/.venv python-path=/tcc-engs/app/
     WSGIProcessGroup cloudunderroof
-    #WSGIScriptAlias / /tcc-engs/app/.venv/bin/mod_wsgi-express
+    
+    # Permitir todos os headers serem passados para o WSGI
+    WSGIPassAuthorization On
+    
     WSGIScriptAlias / /tcc-engs/app/cloudunderroof/wsgi.py
 
     ErrorLog ${APACHE_LOG_DIR}/cloudunderroof_error.log
