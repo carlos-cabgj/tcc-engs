@@ -5,7 +5,12 @@
     <img src="{% static 'img/logo2.png' %}" alt="Logo" style="height: 150px;">
   </div>
 
-  <div class="user-icons">
-    <i class="fas fa-user-circle"></i>
+  <div class="user-icons" id="userIcons">
+    <!-- Será preenchido dinamicamente pelo JavaScript -->
+    <div id="loadingSpinner" style="color: white;">
+      <i class="fas fa-spinner fa-spin"></i>
+    </div>
   </div>
 </header>
+
+<script src="{% static 'js/header.js' %}"></script>

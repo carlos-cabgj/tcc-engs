@@ -1,0 +1,151 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editar Perfil</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="stylesheet" href="{% static 'css/profile.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+    <div class="row">
+        <header class="header">
+            <div class="header-title">
+                <img src="{% static 'img/logo2.png' %}" alt="Logo" style="height: 150px;">
+            </div>
+            <div class="user-icons">
+                <i class="fas fa-user-circle"></i>
+            </div>
+        </header>
+    </div>
+
+    <div id="main-container" class="row">
+        <div class="container">
+            <main class="profile-main">
+                <div class="profile-card">
+                    <div class="profile-header">
+                        <h1>Editar Perfil</h1>
+                    </div>
+
+                    <form id="profileForm" enctype="multipart/form-data" class="profile-form">
+                        {% csrf_token %}
+                        
+                        <!-- Seção de Foto de Perfil -->
+                        <div class="form-section photo-section">
+                            <div class="photo-container">
+                                <div class="photo-preview-wrapper">
+                                    <img id="photoPreview" class="photo-preview" src="{% static 'img/default-avatar.svg' %}" alt="Foto de perfil">
+                                    <label for="profilePhoto" class="photo-upload-label">
+                                        <i class="fas fa-camera"></i>
+                                    </label>
+                                    <input type="file" id="profilePhoto" name="profile_photo" accept="image/*" style="display: none;">
+                                </div>
+                                <div class="photo-info">
+                                    <p class="photo-filename" id="photoFilename">Nenhuma foto selecionada</p>
+                                    <small>Clique na câmera para alterar</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Seção de Informações Pessoais -->
+                        <div class="form-section">
+                            <h2>Informações Pessoais</h2>
+                            
+                            <div class="form-group">
+                                <label for="firstName">Nome:</label>
+                                <input 
+                                    type="text" 
+                                    id="firstName" 
+                                    name="first_name" 
+                                    placeholder="Seu nome"
+                                    class="form-input"
+                                >
+                            </div>
+
+                            <div class="form-group">
+                                <label for="lastName">Sobrenome:</label>
+                                <input 
+                                    type="text" 
+                                    id="lastName" 
+                                    name="last_name" 
+                                    placeholder="Seu sobrenome"
+                                    class="form-input"
+                                >
+                            </div>
+
+                            <div class="form-group">
+                                <label for="username">Usuário:</label>
+                                <input 
+                                    type="text" 
+                                    id="username" 
+                                    name="username" 
+                                    disabled
+                                    class="form-input disabled"
+                                >
+                            </div>
+
+                            <div class="form-group">
+                                <label for="email">Email:</label>
+                                <input 
+                                    type="email" 
+                                    id="email" 
+                                    name="email" 
+                                    placeholder="seu@email.com"
+                                    class="form-input"
+                                    required
+                                >
+                            </div>
+                        </div>
+
+                        <!-- Seção de Função e Status -->
+                        <div class="form-section">
+                            <h2>Configurações de Conta</h2>
+                            
+                            <div class="form-group">
+                                <label for="role">Função:</label>
+                                <select id="role" name="role" class="form-input" required>
+                                    <option value="">Selecione uma função...</option>
+                                    <option value="admin">Administrador</option>
+                                    <option value="user">Usuário</option>
+                                    <option value="visitor">Visitante</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group checkbox-group">
+                                <label for="isActive" class="checkbox-label">
+                                    <input 
+                                        type="checkbox" 
+                                        id="isActive" 
+                                        name="is_active" 
+                                        class="form-checkbox"
+                                    >
+                                    <span>Conta Ativa</span>
+                                </label>
+                                <small>Desmarque para desativar sua conta</small>
+                            </div>
+                        </div>
+
+                        <!-- Mensagens de Status -->
+                        <div id="statusMessage" class="status-message" style="display: none;"></div>
+                        <div id="errorMessage" class="error-message" style="display: none;"></div>
+
+                        <!-- Botões de Ação -->
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Salvar Alterações
+                            </button>
+                            <button type="button" class="btn btn-secondary" onclick="window.history.back()">
+                                <i class="fas fa-times"></i> Cancelar
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script src="{% static 'js/profile-edit.js' %}"></script>
+</body>
+</html>
