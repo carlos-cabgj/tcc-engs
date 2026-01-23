@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="150" height="150" viewBox="0 0 150 150" xmlns="http://www.w3.org/2000/svg">
+  <!-- Fundo -->
+  <rect width="150" height="150" fill="#e9ecef"/>
+  
+  <!-- Círculo do usuário -->
+  <circle cx="75" cy="50" r="25" fill="#6c757d"/>
+  
+  <!-- Corpo do usuário -->
+  <ellipse cx="75" cy="110" rx="35" ry="30" fill="#6c757d"/>
+</svg>

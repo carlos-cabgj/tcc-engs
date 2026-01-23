@@ -1,4 +1,5 @@
 from django.db import models
+from django.contrib.auth.models import User
 
 class Tag(models.Model):
     name = models.CharField(max_length=200, verbose_name="Tag Name")
@@ -6,7 +7,15 @@ class Tag(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField() 
     deleted_at = models.DateTimeField() 
-    lastUsed_at = models.DateTimeField() 
+    lastUsed_at = models.DateTimeField()
+    create_by = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='tags',
+        null=True,
+        blank=True,
+        verbose_name='Criada por'
+    ) 
 
     # class Meta:
     #     verbose_name = "Produto"

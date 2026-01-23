@@ -1,0 +1,210 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerenciar Usuários</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="stylesheet" href="{% static 'css/header.css' %}">
+    <link rel="stylesheet" href="{% static 'css/menu.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        .users-container {
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+			width: 100%;
+        }
+        
+        .users-header {
+            margin-bottom: 20px;
+        }
+        
+        .users-header h2 {
+            color: #333;
+            margin: 0;
+            font-size: 24px;
+        }
+        
+        .users-table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .users-table thead {
+            background-color: #2c3e50;
+            color: white;
+        }
+        
+        .users-table thead th {
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            border: none;
+        }
+        
+        .users-table tbody tr {
+            border-bottom: 1px solid #ecf0f1;
+            transition: background-color 0.3s;
+        }
+        
+        .users-table tbody tr:hover {
+            background-color: #f8f9fa;
+        }
+        
+        .users-table tbody td {
+            padding: 12px 15px;
+            vertical-align: middle;
+        }
+        
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid #ecf0f1;
+        }
+        
+        .user-avatar.default {
+            background-color: #3498db;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+        
+        .status-active {
+            background-color: #27ae60;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .status-inactive {
+            background-color: #e74c3c;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .btn-edit {
+            background-color: #3498db;
+            color: white;
+            padding: 8px 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.3s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .btn-edit:hover {
+            background-color: #2980b9;
+        }
+        
+        .no-users {
+            text-align: center;
+            padding: 40px;
+            color: #7f8c8d;
+        }
+        
+        .no-users i {
+            font-size: 48px;
+            margin-bottom: 20px;
+            color: #bdc3c7;
+        }
+    </style>
+</head>
+<body>
+    <div class="row">
+        {% include "./partials/header.html" %}
+    </div>
+    
+    <div id="main-container" class="row">
+        <div class="container">
+            <section class="content-area">
+                <div class="search-bar">
+                    <input type="text" placeholder="Search">
+                    <button><i class="fas fa-search"></i></button>
+                </div>
+                {% include "./partials/menu.html" %}
+            </section>
+            
+            <main class="main-content">
+                <div class="users-container">
+                    <div class="users-header">
+                        <h2><i class="fas fa-users"></i> Gerenciamento de Usuários</h2>
+                    </div>
+                    
+                    {% if users %}
+                        <table class="users-table">
+                            <thead>
+                                <tr>
+                                    <th>Avatar</th>
+                                    <th>Usuário</th>
+                                    <th>Nome</th>
+                                    <th>Email</th>
+                                    <th>Status</th>
+                                    <th>Data de Criação</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for user in users %}
+                                    <tr>
+                                        <td>
+                                            {% if user.profile.profile_img %}
+                                                <img src="{{ user.profile.profile_img.url }}" alt="Avatar" class="user-avatar">
+                                            {% else %}
+                                                <div class="user-avatar default">
+                                                    {{ user.username|first|upper }}
+                                                </div>
+                                            {% endif %}
+                                        </td>
+                                        <td><strong>{{ user.username }}</strong></td>
+                                        <td>{{ user.first_name }} {{ user.last_name }}</td>
+                                        <td>{{ user.email }}</td>
+                                        <td>
+                                            {% if user.is_active %}
+                                                <span class="status-active"><i class="fas fa-check-circle"></i> Ativo</span>
+                                            {% else %}
+                                                <span class="status-inactive"><i class="fas fa-times-circle"></i> Inativo</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ user.date_joined|date:"d/m/Y H:i" }}</td>
+                                        <td>
+                                            <a href="{% url 'edit_user' user.id %}" class="btn-edit">
+                                                <i class="fas fa-edit"></i> Editar
+                                            </a>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    {% else %}
+                        <div class="no-users">
+                            <i class="fas fa-users-slash"></i>
+                            <p>Nenhum usuário encontrado no sistema</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </main>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,6 +1,12 @@
 from django.db import models
 
 class File(models.Model):
+    VISIBILITY_CHOICES = [
+        ('public', 'Público'),
+        ('users', 'Usuários'),
+        ('private', 'Privado'),
+    ]
+    
     name = models.CharField(max_length=200, verbose_name="File Name")
     path = models.TextField(verbose_name="File Path")
     signature = models.CharField(max_length=64, verbose_name="File signature")
@@ -15,6 +21,13 @@ class File(models.Model):
         default=0,
         null=False,
         blank=False,
+    )
+    
+    visibility = models.CharField(
+        max_length=10,
+        choices=VISIBILITY_CHOICES,
+        default='users',
+        verbose_name="Visibilidade do Arquivo"
     )
 
     deleted_at = models.DateTimeField() 

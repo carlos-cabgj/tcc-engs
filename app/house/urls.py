@@ -11,10 +11,12 @@ from .api.profile_me import ProfileMeView
 from rest_framework.routers import DefaultRouter
 from .api.user import UserViewSet
 from .api.profile import ProfileViewSet
+from .api.tags import TagViewSet
 
 router = DefaultRouter()
 router.register(r'users', UserViewSet, basename='user')
 router.register(r'profile', ProfileViewSet, basename='profile')
+router.register(r'tags', TagViewSet, basename='tag')
 
 urlpatterns = [
     #path("", views.index, name="index"),
@@ -22,6 +24,10 @@ urlpatterns = [
     path("", views.main, name="main"),
     path("video", views.video, name="video"),
     path("profile", views.profile_edit, name="profile_edit"),
+    path("users", views.users_list, name="users_list"),
+    path("users/<int:user_id>/edit/", views.edit_user, name="edit_user"),
+    path("upload", views.upload_file, name="upload_file"),
+    path("api/upload/", views.upload_file_api, name="upload_file_api"),
     path("login", views.login_view, name="login"),
 
     path("auth", views.auth, name="auth"),

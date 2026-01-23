@@ -1,0 +1,453 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload de Arquivo</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="stylesheet" href="{% static 'css/header.css' %}">
+    <link rel="stylesheet" href="{% static 'css/menu.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        .upload-container {
+            max-width: 600px;
+            margin: 40px auto;
+            padding: 30px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .upload-header {
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        .upload-header h2 {
+            color: #2c3e50;
+            margin: 0;
+            font-size: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #2c3e50;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        
+        .form-group label .required {
+            color: #e74c3c;
+            margin-left: 4px;
+        }
+        
+        .file-input-wrapper {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+            width: 100%;
+        }
+        
+        .file-input-wrapper input[type=file] {
+            position: absolute;
+            left: -9999px;
+        }
+        
+        .file-input-label {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 20px;
+            border: 2px dashed #3498db;
+            border-radius: 8px;
+            background-color: #ecf0f1;
+            cursor: pointer;
+            transition: all 0.3s;
+            color: #2c3e50;
+            font-weight: 500;
+        }
+        
+        .file-input-label:hover {
+            border-color: #2980b9;
+            background-color: #bdc3c7;
+        }
+        
+        .file-input-label i {
+            font-size: 20px;
+            color: #3498db;
+        }
+        
+        .file-name-display {
+            margin-top: 8px;
+            padding: 8px;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+            color: #27ae60;
+            font-size: 12px;
+            display: none;
+        }
+        
+        .file-name-display.show {
+            display: block;
+        }
+        
+        .text-input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #bdc3c7;
+            border-radius: 4px;
+            font-size: 14px;
+            font-family: inherit;
+            transition: border-color 0.3s;
+            box-sizing: border-box;
+        }
+        
+        .text-input:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+        }
+        
+        .select-input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #bdc3c7;
+            border-radius: 4px;
+            font-size: 14px;
+            font-family: inherit;
+            background-color: white;
+            cursor: pointer;
+            transition: border-color 0.3s;
+            box-sizing: border-box;
+        }
+        
+        .select-input:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+        }
+        
+        .btn-submit {
+            width: 100%;
+            padding: 14px;
+            background-color: #27ae60;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            margin-top: 10px;
+        }
+        
+        .btn-submit:hover {
+            background-color: #229954;
+        }
+        
+        .btn-submit:disabled {
+            background-color: #bdc3c7;
+            cursor: not-allowed;
+        }
+        
+        .error-message {
+            color: #e74c3c;
+            font-size: 13px;
+            margin-top: 6px;
+            display: none;
+        }
+        
+        .error-message.show {
+            display: block;
+        }
+        
+        .success-message {
+            padding: 12px;
+            background-color: #d5f4e6;
+            border: 1px solid #27ae60;
+            border-radius: 4px;
+            color: #27ae60;
+            margin-bottom: 20px;
+            display: none;
+        }
+        
+        .success-message.show {
+            display: block;
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            margin-top: 10px;
+        }
+        
+        .loading.show {
+            display: block;
+        }
+        
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #3498db;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            margin-right: 8px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="row">
+        {% include "./partials/header.html" %}
+    </div>
+    
+    <div id="main-container" class="row">
+        <div class="container">
+            <section class="content-area">
+                <div class="search-bar">
+                    <input type="text" placeholder="Search">
+                    <button><i class="fas fa-search"></i></button>
+                </div>
+                {% include "./partials/menu.html" %}
+            </section>
+            
+            <main class="main-content">
+                <div class="upload-container">
+                    <div class="upload-header">
+                        <h2><i class="fas fa-cloud-upload-alt"></i> Upload de Arquivo</h2>
+                    </div>
+                    
+                    <div class="success-message" id="successMessage"></div>
+                    
+                    <form id="uploadForm" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        
+                        <!-- Campo de Arquivo -->
+                        <div class="form-group">
+                            <label for="fileInput">
+                                Arquivo <span class="required">*</span>
+                            </label>
+                            <div class="file-input-wrapper">
+                                <input type="file" id="fileInput" name="file" required>
+                                <label for="fileInput" class="file-input-label">
+                                    <i class="fas fa-paperclip"></i>
+                                    <span id="fileLabel">Selecione ou arraste um arquivo</span>
+                                </label>
+                            </div>
+                            <div class="file-name-display" id="fileName"></div>
+                            <div class="error-message" id="fileError"></div>
+                        </div>
+                        
+                        <!-- Campo de Nome -->
+                        <div class="form-group">
+                            <label for="fileName">
+                                Nome do Arquivo <span class="required">*</span>
+                            </label>
+                            <input 
+                                type="text" 
+                                id="fileNameInput" 
+                                name="file_name" 
+                                class="text-input" 
+                                placeholder="Digite o nome do arquivo"
+                                required
+                            >
+                            <div class="error-message" id="fileNameError"></div>
+                        </div>
+                        
+                        <!-- Campo de Visibilidade -->
+                        <div class="form-group">
+                            <label for="visibility">
+                                Visibilidade <span class="required">*</span>
+                            </label>
+                            <select id="visibility" name="visibility" class="select-input" required>
+                                <option value="users" selected>Usuários</option>
+                                <option value="public">Público</option>
+                                <option value="private">Privado</option>
+                            </select>
+                            <div class="error-message" id="visibilityError"></div>
+                        </div>
+                        
+                        <!-- Botão de Submit -->
+                        <button type="submit" class="btn-submit" id="submitBtn">
+                            <i class="fas fa-upload"></i> Enviar Arquivo
+                        </button>
+                        
+                        <div class="loading" id="loading">
+                            <div class="spinner"></div>
+                            <span>Enviando arquivo...</span>
+                        </div>
+                    </form>
+                </div>
+            </main>
+        </div>
+    </div>
+    
+    <script>
+        const fileInput = document.getElementById('fileInput');
+        const fileNameInput = document.getElementById('fileNameInput');
+        const visibilitySelect = document.getElementById('visibility');
+        const uploadForm = document.getElementById('uploadForm');
+        const fileNameDisplay = document.getElementById('fileName');
+        const fileLabel = document.getElementById('fileLabel');
+        const submitBtn = document.getElementById('submitBtn');
+        const loading = document.getElementById('loading');
+        const successMessage = document.getElementById('successMessage');
+        
+        // Validar arquivo selecionado
+        fileInput.addEventListener('change', function() {
+            const errorEl = document.getElementById('fileError');
+            errorEl.classList.remove('show');
+            
+            if (this.files && this.files[0]) {
+                fileNameDisplay.textContent = `✓ Arquivo selecionado: ${this.files[0].name}`;
+                fileNameDisplay.classList.add('show');
+                fileLabel.innerHTML = `<i class="fas fa-check-circle" style="color: #27ae60;"></i><span>${this.files[0].name}</span>`;
+            } else {
+                fileNameDisplay.classList.remove('show');
+                fileLabel.innerHTML = `<i class="fas fa-paperclip"></i><span>Selecione ou arraste um arquivo</span>`;
+            }
+        });
+        
+        // Validação do formulário
+        uploadForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            // Limpar mensagens de erro
+            document.querySelectorAll('.error-message').forEach(el => el.classList.remove('show'));
+            successMessage.classList.remove('show');
+            
+            let hasErrors = false;
+            
+            // Validar arquivo
+            if (!fileInput.files || !fileInput.files[0]) {
+                document.getElementById('fileError').textContent = 'Selecione um arquivo';
+                document.getElementById('fileError').classList.add('show');
+                hasErrors = true;
+            }
+            
+            // Validar nome do arquivo
+            if (!fileNameInput.value.trim()) {
+                document.getElementById('fileNameError').textContent = 'Nome do arquivo não pode estar vazio';
+                document.getElementById('fileNameError').classList.add('show');
+                hasErrors = true;
+            }
+            
+            // Validar visibilidade
+            if (!visibilitySelect.value) {
+                document.getElementById('visibilityError').textContent = 'Selecione uma visibilidade';
+                document.getElementById('visibilityError').classList.add('show');
+                hasErrors = true;
+            }
+            
+            if (hasErrors) {
+                return;
+            }
+            
+            // Enviar arquivo
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+            formData.append('file_name', fileNameInput.value.trim());
+            formData.append('visibility', visibilitySelect.value);
+            formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
+            
+            submitBtn.disabled = true;
+            loading.classList.add('show');
+            
+            try {
+                const response = await fetch('{% url "upload_file_api" %}', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    successMessage.textContent = '✓ ' + data.message;
+                    successMessage.classList.add('show');
+                    
+                    // Limpar formulário
+                    uploadForm.reset();
+                    fileNameDisplay.classList.remove('show');
+                    fileLabel.innerHTML = `<i class="fas fa-paperclip"></i><span>Selecione ou arraste um arquivo</span>`;
+                    
+                    // Redirecionar após 2 segundos
+                    setTimeout(() => {
+                        window.location.href = '{% url "main" %}';
+                    }, 2000);
+                } else {
+                    const errorField = data.error.toLowerCase().includes('arquivo') ? 'fileError' : 
+                                      data.error.toLowerCase().includes('nome') ? 'fileNameError' : 
+                                      'fileNameError';
+                    document.getElementById(errorField).textContent = data.error;
+                    document.getElementById(errorField).classList.add('show');
+                }
+            } catch (error) {
+                document.getElementById('fileNameError').textContent = 'Erro ao enviar arquivo';
+                document.getElementById('fileNameError').classList.add('show');
+            } finally {
+                submitBtn.disabled = false;
+                loading.classList.remove('show');
+            }
+        });
+        
+        // Drag and drop
+        const dropZone = document.querySelector('.file-input-label');
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, preventDefaults, false);
+        });
+        
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+        
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropZone.addEventListener(eventName, highlight, false);
+        });
+        
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, unhighlight, false);
+        });
+        
+        function highlight(e) {
+            dropZone.style.borderColor = '#2980b9';
+            dropZone.style.backgroundColor = '#d6eaf8';
+        }
+        
+        function unhighlight(e) {
+            dropZone.style.borderColor = '#3498db';
+            dropZone.style.backgroundColor = '#ecf0f1';
+        }
+        
+        dropZone.addEventListener('drop', handleDrop, false);
+        
+        function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            fileInput.files = files;
+            
+            // Disparar evento de mudança
+            const event = new Event('change', { bubbles: true });
+            fileInput.dispatchEvent(event);
+        }
+    </script>
+</body>
+</html>
