@@ -61,9 +61,36 @@ def login_view(request):
 def auth(request):
     return HttpResponse("Hello 2")
 
+@jwt_login_required
 def main(request):
-    context = {'name': 'carlos'}
-    return render(request, 'house/main.html', context);
+    from django.db.models import Q
+    
+    # Verificar grupos do usuário
+    user = request.user
+    is_admin = user.is_staff or user.groups.filter(name__iexact='admin').exists()
+    is_users_group = user.groups.filter(name__iexact='users').exists() or user.groups.filter(name__iexact='usuários').exists()
+    is_guest = user.groups.filter(name__iexact='guest').exists()
+    
+    # Construir query baseado nas permissões
+    if is_admin or is_users_group:
+        # Admin e Users: todos não privados + privados próprios
+        files = File.objects.filter(
+            Q(visibility__in=['public', 'users']) | Q(user=user, visibility='private')
+        ).order_by('-created_at')
+    elif is_guest:
+        # Guest: apenas públicos + privados próprios
+        files = File.objects.filter(
+            Q(visibility='public') | Q(user=user, visibility='private')
+        ).order_by('-created_at')
+    else:
+        # Usuário sem grupo: apenas próprios arquivos
+        files = File.objects.filter(user=user).order_by('-created_at')
+    
+    context = {
+        'name': user.username,
+        'files': files,
+    }
+    return render(request, 'house/main.html', context)
 
 @login_required(login_url='login')
 def profile_edit(request):
