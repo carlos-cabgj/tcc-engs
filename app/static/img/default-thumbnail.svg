@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="150" height="100" viewBox="0 0 150 100">
+  <rect width="150" height="100" fill="#e0e0e0"/>
+  <g transform="translate(75, 50)">
+    <circle cx="0" cy="-10" r="15" fill="#999"/>
+    <path d="M -25,20 L -15,5 L 15,5 L 25,20 Z" fill="#999"/>
+  </g>
+  <text x="75" y="90" font-family="Arial, sans-serif" font-size="12" fill="#666" text-anchor="middle">Sem thumbnail</text>
+</svg>

@@ -8,36 +8,61 @@
         </div>
         <div class="video-shelf">
             <h3>Prateleira</h3>
-            <div class="search-shelf">
-                <input id="search-field" name="search-field" type="text" placeholder="Pesquisar...">
-                <input id="search-button" value="search" type="button">
-            </div>
+   
+                <div class="search-bar">
+                    <input type="text" placeholder="Search">
+                    <button><i class="fas fa-search"></i></button>
+                </div>
             <div class="item-grid">
+                {% for file in files %}
                 <div class="item-card">
-                            <a href="/static/videos/1.mp4">
-                    <img src="https://via.placeholder.com/150x100?text=Botiek" alt="Botiek">
-                        </a>
-
-    <h4>
-                            <a href={% static 'videos/1.mp4' %}>
-                            Botieks
-                        </a>
+                    {% if file.thumbnail %}
+                        {% if file.file %}
+                            <a href="{{ file.file.url }}">
+                                <img src="{{ file.thumbnail.url }}" alt="{{ file.name }}">
+                            </a>
+                        {% else %}
+                            <img src="{{ file.thumbnail.url }}" alt="{{ file.name }}">
+                        {% endif %}
+                    {% else %}
+                        {% if file.file %}
+                            <a href="{{ file.file.url }}">
+                                <img src="{% static 'img/default-thumbnail.svg' %}" alt="{{ file.name }}">
+                            </a>
+                        {% else %}
+                            <img src="{% static 'img/default-thumbnail.svg' %}" alt="{{ file.name }}">
+                        {% endif %}
+                    {% endif %}
+                    <h4>
+                        {% if file.file %}
+                            <a href="{{ file.file.url }}">
+                                {{ file.name }}
+                            </a>
+                        {% else %}
+                            {{ file.name }}
+                        {% endif %}
                     </h4>
-                    <p>Ootdgior</p>
-                    <i class="fas fa-check-circle check-icon"></i>
+                    <p>
+                        <small>
+                            {% if file.visibility == 'public' %}
+                                <i class="fas fa-globe"></i> Público
+                            {% elif file.visibility == 'users' %}
+                                <i class="fas fa-users"></i> Usuários
+                            {% else %}
+                                <i class="fas fa-lock"></i> Privado
+                            {% endif %}
+                            | {{ file.size|filesizeformat }}
+                        </small>
+                    </p>
+                    {% if file.user == request.user %}
+                        <i class="fas fa-check-circle check-icon" title="Seu arquivo"></i>
+                    {% endif %}
                 </div>
-                <div class="item-card">
-                    <img src="https://via.placeholder.com/150x100?text=Sotters" alt="Sotters">
-                    <h4>Sotters 999</h4>
-                    <p>Thetbelire</p>
-                    <i class="fas fa-plus-circle add-icon"></i>
+                {% empty %}
+                <div class="item-card" style="grid-column: 1 / -1; text-align: center; padding: 2rem;">
+                    <p>Nenhum arquivo encontrado</p>
                 </div>
-                <div class="item-card">
-                    <img src="https://via.placeholder.com/150x100?text=Morats" alt="Morats">
-                    <h4>Morats</h4>
-                    <p>Thetfellre</p>
-                    <i class="fas fa-star favorite-icon"></i>
-                </div>
+                {% endfor %}
             </div>
         </div>
     </section>

@@ -443,6 +443,25 @@
                             <div class="error-message" id="visibilityError"></div>
                         </div>
 
+                        <!-- Campo de Thumbnail -->
+                        <div class="form-group">
+                            <label for="thumbnailInput">
+                                <i class="fas fa-image"></i> Thumbnail (Opcional)
+                            </label>
+                            <div class="file-input-wrapper">
+                                <input type="file" id="thumbnailInput" name="thumbnail" accept="image/jpeg,image/jpg,image/png">
+                                <label for="thumbnailInput" class="file-input-label">
+                                    <i class="fas fa-image"></i>
+                                    <span id="thumbnailLabel">Selecione uma imagem (JPG, PNG - máx 400x400)</span>
+                                </label>
+                            </div>
+                            <div class="file-name-display" id="thumbnailName"></div>
+                            <div id="thumbnailPreview" style="margin-top: 10px; display: none;">
+                                <img id="thumbnailPreviewImg" style="max-width: 200px; max-height: 200px; border: 1px solid #ddd; border-radius: 4px; padding: 5px;" />
+                            </div>
+                            <div class="error-message" id="thumbnailError"></div>
+                        </div>
+
                         <!-- Seção de Tags -->
                         <div class="form-group tags-section">
                             <label>
@@ -681,6 +700,52 @@
             }
         });
         
+        // Validar thumbnail
+        const thumbnailInput = document.getElementById('thumbnailInput');
+        const thumbnailNameDisplay = document.getElementById('thumbnailName');
+        const thumbnailLabel = document.getElementById('thumbnailLabel');
+        const thumbnailPreview = document.getElementById('thumbnailPreview');
+        const thumbnailPreviewImg = document.getElementById('thumbnailPreviewImg');
+        
+        thumbnailInput.addEventListener('change', function() {
+            const errorEl = document.getElementById('thumbnailError');
+            errorEl.classList.remove('show');
+            
+            if (this.files && this.files[0]) {
+                const file = this.files[0];
+                
+                // Validar tipo
+                const validTypes = ['image/jpeg', 'image/jpg', 'image/png'];
+                if (!validTypes.includes(file.type)) {
+                    errorEl.textContent = 'Apenas arquivos JPG, JPEG ou PNG são permitidos';
+                    errorEl.classList.add('show');
+                    this.value = '';
+                    thumbnailPreview.style.display = 'none';
+                    return;
+                }
+                
+                // Validar dimensões
+                const img = new Image();
+                img.onload = function() {
+                    if (img.width > 400 || img.height > 400) {
+                        errorEl.textContent = 'A imagem deve ter no máximo 400x400 pixels';
+                        errorEl.classList.add('show');
+                        thumbnailInput.value = '';
+                        thumbnailPreview.style.display = 'none';
+                    } else {
+                        thumbnailNameDisplay.textContent = `✓ Thumbnail: ${file.name} (${img.width}x${img.height})`;
+                        thumbnailNameDisplay.classList.add('show');
+                        thumbnailPreviewImg.src = URL.createObjectURL(file);
+                        thumbnailPreview.style.display = 'block';
+                    }
+                };
+                img.src = URL.createObjectURL(file);
+            } else {
+                thumbnailNameDisplay.classList.remove('show');
+                thumbnailPreview.style.display = 'none';
+            }
+        });
+        
         // Validação do formulário
         uploadForm.addEventListener('submit', async function(e) {
             e.preventDefault();
@@ -725,6 +790,11 @@
             formData.append('file', fileInput.files[0]);
             formData.append('file_name', fileNameInput.value.trim());
             formData.append('visibility', visibilitySelect.value);
+            
+            // Adicionar thumbnail se existir
+            if (thumbnailInput.files && thumbnailInput.files[0]) {
+                formData.append('thumbnail', thumbnailInput.files[0]);
+            }
             
             // Adicionar tags (IDs e nomes para novas tags)
             activeTags.forEach(tag => {
