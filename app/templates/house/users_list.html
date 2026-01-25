@@ -117,6 +117,26 @@
             background-color: #2980b9;
         }
         
+        .btn-add-user {
+            background-color: #27ae60;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: background-color 0.3s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn-add-user:hover {
+            background-color: #229954;
+        }
+        
         .no-users {
             text-align: center;
             padding: 40px;
@@ -148,7 +168,12 @@
             <main class="main-content">
                 <div class="users-container">
                     <div class="users-header">
-                        <h2><i class="fas fa-users"></i> Gerenciamento de Usuários</h2>
+                        <div style="display: flex; align-items: center; gap: 15px; justify-content: space-between;">
+                            <h2 style="margin: 0;"><i class="fas fa-users"></i> Gerenciamento de Usuários</h2>
+                            <a href="{% url 'create_user' %}" class="btn-add-user">
+                                <i class="fas fa-user-plus"></i> Novo Usuário
+                            </a>
+                        </div>
                     </div>
                     
                     {% if users %}

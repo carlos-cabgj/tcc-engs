@@ -1,4 +1,5 @@
 from django.db import models
+from django.contrib.auth.models import User
 
 class File(models.Model):
     VISIBILITY_CHOICES = [
@@ -8,7 +9,8 @@ class File(models.Model):
     ]
     
     name = models.CharField(max_length=200, verbose_name="File Name")
-    path = models.TextField(verbose_name="File Path")
+    path = models.TextField(verbose_name="File Path", null=True, blank=True)
+    file = models.FileField(upload_to='uploads/', null=True, blank=True, verbose_name="Arquivo")
     signature = models.CharField(max_length=64, verbose_name="File signature")
 
     size = models.PositiveIntegerField(
@@ -30,10 +32,18 @@ class File(models.Model):
         verbose_name="Visibilidade do Arquivo"
     )
 
-    deleted_at = models.DateTimeField() 
+    deleted_at = models.DateTimeField(null=True, blank=True) 
     created_at = models.DateTimeField(auto_now_add=True)
-    viewed_at = models.DateTimeField() 
-
+    viewed_at = models.DateTimeField(null=True, blank=True)
+    
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='files',
+        null=True,
+        blank=True,
+        verbose_name='Usuário que criou o arquivo'
+    )
 
     #tags = models.ManyToManyField('Tag', related_name='File', blank=True)
     tags = models.ManyToManyField('Tag', through='FileTag', related_name='File')

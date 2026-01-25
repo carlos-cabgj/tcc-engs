@@ -2,7 +2,6 @@ from rest_framework import viewsets, permissions, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.filters import OrderingFilter, SearchFilter
-from django_filters.rest_framework import DjangoFilterBackend
 from house.models import Tag
 from house.serializer import TagSerializer, TagCreateSerializer
 
@@ -15,7 +14,7 @@ class TagViewSet(viewsets.ModelViewSet):
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
     permission_classes = [permissions.IsAuthenticated]
-    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    filter_backends = [SearchFilter, OrderingFilter]
     search_fields = ['name']
     ordering_fields = ['countUses', 'lastUsed_at', 'created_at', 'updated_at']
     ordering = ['-created_at']  # Ordenação padrão

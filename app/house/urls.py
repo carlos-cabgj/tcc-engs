@@ -25,6 +25,7 @@ urlpatterns = [
     path("video", views.video, name="video"),
     path("profile", views.profile_edit, name="profile_edit"),
     path("users", views.users_list, name="users_list"),
+    path("users/create/", views.create_user, name="create_user"),
     path("users/<int:user_id>/edit/", views.edit_user, name="edit_user"),
     path("upload", views.upload_file, name="upload_file"),
     path("api/upload/", views.upload_file_api, name="upload_file_api"),

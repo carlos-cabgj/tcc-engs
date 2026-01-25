@@ -212,6 +212,164 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+
+        /* Tags Styles */
+        .tags-section {
+            border-top: 2px solid #ecf0f1;
+            padding-top: 20px;
+            margin-top: 20px;
+        }
+
+        .tag-input-group {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+
+        .tag-input-group input {
+            flex: 1;
+            padding: 12px;
+            border: 1px solid #bdc3c7;
+            border-radius: 4px;
+            font-size: 14px;
+            font-family: inherit;
+            transition: border-color 0.3s;
+            box-sizing: border-box;
+        }
+
+        .tag-input-group input:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+        }
+
+        .btn-add-tag {
+            padding: 12px 20px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-add-tag:hover {
+            background-color: #2980b9;
+        }
+
+        .btn-add-tag:disabled {
+            background-color: #bdc3c7;
+            cursor: not-allowed;
+        }
+
+        .tag-suggestions {
+            background-color: #f8f9fa;
+            border: 1px solid #ecf0f1;
+            border-radius: 4px;
+            max-height: 200px;
+            overflow-y: auto;
+            margin-bottom: 15px;
+            display: none;
+        }
+
+        .tag-suggestions.show {
+            display: block;
+        }
+
+        .tag-suggestion-item {
+            padding: 10px 15px;
+            border-bottom: 1px solid #ecf0f1;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            font-size: 14px;
+        }
+
+        .tag-suggestion-item:last-child {
+            border-bottom: none;
+        }
+
+        .tag-suggestion-item:hover {
+            background-color: #ecf0f1;
+        }
+
+        .tag-suggestion-item i {
+            margin-right: 6px;
+            color: #27ae60;
+        }
+
+        .selected-tags {
+            background-color: #f8f9fa;
+            border: 1px solid #ecf0f1;
+            border-radius: 4px;
+            padding: 15px;
+            min-height: 60px;
+        }
+
+        .selected-tags-label {
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+
+        .tags-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .tag-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background-color: white;
+            border: 1px solid #bdc3c7;
+            border-radius: 4px;
+            padding: 8px 12px;
+            font-size: 14px;
+        }
+
+        .tag-item input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+            accent-color: #3498db;
+            margin: 0;
+        }
+
+        .tag-item label {
+            margin: 0;
+            cursor: pointer;
+            flex: 1;
+        }
+
+        .tag-item button {
+            background: none;
+            border: none;
+            color: #e74c3c;
+            cursor: pointer;
+            padding: 0;
+            font-size: 16px;
+            transition: color 0.2s;
+        }
+
+        .tag-item button:hover {
+            color: #c0392b;
+        }
+
+        .no-tags {
+            color: #7f8c8d;
+            font-style: italic;
+            font-size: 13px;
+            text-align: center;
+            padding: 20px;
+        }
     </style>
 </head>
 <body>
@@ -284,6 +442,35 @@
                             </select>
                             <div class="error-message" id="visibilityError"></div>
                         </div>
+
+                        <!-- Seção de Tags -->
+                        <div class="form-group tags-section">
+                            <label>
+                                <i class="fas fa-tags"></i> Tags
+                            </label>
+                            
+                            <div class="tag-input-group">
+                                <input 
+                                    type="text" 
+                                    id="tagInput" 
+                                    class="text-input" 
+                                    placeholder="Digite o nome da tag"
+                                    autocomplete="off"
+                                >
+                                <button type="button" class="btn-add-tag" id="addTagBtn">
+                                    <i class="fas fa-plus"></i> Adicionar
+                                </button>
+                            </div>
+
+                            <div class="tag-suggestions" id="tagSuggestions"></div>
+
+                            <div class="selected-tags">
+                                <div class="selected-tags-label">Tags Selecionadas:</div>
+                                <div class="tags-list" id="tagsList">
+                                    <div class="no-tags">Nenhuma tag selecionada</div>
+                                </div>
+                            </div>
+                        </div>
                         
                         <!-- Botão de Submit -->
                         <button type="submit" class="btn-submit" id="submitBtn">
@@ -310,6 +497,174 @@
         const submitBtn = document.getElementById('submitBtn');
         const loading = document.getElementById('loading');
         const successMessage = document.getElementById('successMessage');
+
+        // Tags
+        const tagInput = document.getElementById('tagInput');
+        const addTagBtn = document.getElementById('addTagBtn');
+        const tagSuggestions = document.getElementById('tagSuggestions');
+        const tagsList = document.getElementById('tagsList');
+
+        let selectedTags = new Map(); // Map para manter track das tags selecionadas (id -> {id, name, checked})
+
+        // Buscar tags do servidor
+        async function fetchTags(query) {
+            if (!query || query.length < 1) {
+                tagSuggestions.classList.remove('show');
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/tags/?search=${encodeURIComponent(query)}`, {
+                    headers: {
+                        'Authorization': `Bearer ${document.cookie.split('; ').find(row => row.startsWith('access_token='))?.split('=')[1] || ''}`
+                    }
+                });
+                
+                const data = await response.json();
+                const results = data.results || data || [];
+
+                renderSuggestions(results, query);
+            } catch (error) {
+                console.error('Erro ao buscar tags:', error);
+            }
+        }
+
+        // Renderizar sugestões
+        function renderSuggestions(tags, query) {
+            tagSuggestions.innerHTML = '';
+
+            if (!tags || tags.length === 0) {
+                tagSuggestions.innerHTML = `
+                    <div class="tag-suggestion-item" onclick="createNewTag('${query}')">
+                        <i class="fas fa-plus"></i> Criar nova tag: "${query}"
+                    </div>
+                `;
+                tagSuggestions.classList.add('show');
+                return;
+            }
+
+            tags.forEach(tag => {
+                if (!selectedTags.has(tag.id)) {
+                    const div = document.createElement('div');
+                    div.className = 'tag-suggestion-item';
+                    div.innerHTML = `<i class="fas fa-tag"></i> ${tag.name}`;
+                    div.onclick = () => selectTag(tag.id, tag.name);
+                    tagSuggestions.appendChild(div);
+                }
+            });
+
+            // Adicionar opção de criar nova tag
+            const existingTag = tags.find(t => t.name.toLowerCase() === query.toLowerCase());
+            if (!existingTag) {
+                const createDiv = document.createElement('div');
+                createDiv.className = 'tag-suggestion-item';
+                createDiv.innerHTML = `<i class="fas fa-plus"></i> Criar nova tag: "${query}"`;
+                createDiv.onclick = () => createNewTag(query);
+                tagSuggestions.appendChild(createDiv);
+            }
+
+            tagSuggestions.classList.add('show');
+        }
+
+        // Selecionar tag
+        function selectTag(tagId, tagName) {
+            if (!selectedTags.has(tagId)) {
+                selectedTags.set(tagId, {
+                    id: tagId,
+                    name: tagName,
+                    checked: true,
+                    isNew: false
+                });
+            }
+            tagInput.value = '';
+            tagSuggestions.classList.remove('show');
+            renderSelectedTags();
+        }
+
+        // Criar nova tag
+        function createNewTag(tagName) {
+            const tempId = 'new_' + Date.now();
+            selectedTags.set(tempId, {
+                id: tempId,
+                name: tagName,
+                checked: true,
+                isNew: true
+            });
+            tagInput.value = '';
+            tagSuggestions.classList.remove('show');
+            renderSelectedTags();
+        }
+
+        // Renderizar tags selecionadas
+        function renderSelectedTags() {
+            if (selectedTags.size === 0) {
+                tagsList.innerHTML = '<div class="no-tags">Nenhuma tag selecionada</div>';
+                return;
+            }
+
+            tagsList.innerHTML = '';
+            selectedTags.forEach((tag, tagId) => {
+                const div = document.createElement('div');
+                div.className = 'tag-item';
+                div.innerHTML = `
+                    <input type="checkbox" id="tag_${tagId}" ${tag.checked ? 'checked' : ''}>
+                    <label for="tag_${tagId}">${tag.name}</label>
+                    <button type="button" onclick="removeTag('${tagId}')">
+                        <i class="fas fa-times"></i>
+                    </button>
+                `;
+                
+                const checkbox = div.querySelector('input[type="checkbox"]');
+                checkbox.addEventListener('change', (e) => {
+                    tag.checked = e.target.checked;
+                });
+
+                tagsList.appendChild(div);
+            });
+        }
+
+        // Remover tag
+        function removeTag(tagId) {
+            selectedTags.delete(tagId);
+            renderSelectedTags();
+            if (selectedTags.size === 0) {
+                tagSuggestions.classList.remove('show');
+            }
+        }
+
+        // Event listeners para tags
+        tagInput.addEventListener('input', (e) => {
+            fetchTags(e.target.value);
+        });
+
+        tagInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                if (tagInput.value.trim()) {
+                    createNewTag(tagInput.value.trim());
+                }
+            }
+        });
+
+        addTagBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            if (tagInput.value.trim()) {
+                // Se houver sugestões, selecionar a primeira
+                const firstSuggestion = tagSuggestions.querySelector('.tag-suggestion-item');
+                if (firstSuggestion && tagSuggestions.classList.contains('show')) {
+                    firstSuggestion.click();
+                } else {
+                    createNewTag(tagInput.value.trim());
+                }
+            }
+        });
+
+        // Fechar sugestões ao clicar fora
+        document.addEventListener('click', (e) => {
+            if (e.target !== tagInput && !tagSuggestions.contains(e.target)) {
+                tagSuggestions.classList.remove('show');
+            }
+        });
         
         // Validar arquivo selecionado
         fileInput.addEventListener('change', function() {
@@ -361,11 +716,24 @@
                 return;
             }
             
+            // Coletar tags ativas
+            const activeTags = Array.from(selectedTags.values())
+                .filter(tag => tag.checked);
+            
             // Enviar arquivo
             const formData = new FormData();
             formData.append('file', fileInput.files[0]);
             formData.append('file_name', fileNameInput.value.trim());
             formData.append('visibility', visibilitySelect.value);
+            
+            // Adicionar tags (IDs e nomes para novas tags)
+            activeTags.forEach(tag => {
+                formData.append('tags', tag.id);
+                if (tag.isNew) {
+                    formData.append(`tag_name_${tag.id}`, tag.name);
+                }
+            });
+            
             formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
             
             submitBtn.disabled = true;
@@ -385,6 +753,8 @@
                     
                     // Limpar formulário
                     uploadForm.reset();
+                    selectedTags.clear();
+                    renderSelectedTags();
                     fileNameDisplay.classList.remove('show');
                     fileLabel.innerHTML = `<i class="fas fa-paperclip"></i><span>Selecione ou arraste um arquivo</span>`;
                     
