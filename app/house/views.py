@@ -296,11 +296,49 @@ def upload_file_api(request):
         print(f"DEBUG: Arquivo recebido: {uploaded_file.name}, Tamanho: {uploaded_file.size}")
         print(f"DEBUG: Usuário autenticado: {request.user}, ID: {request.user.id}")
         
+        # Processar thumbnail se existir
+        thumbnail_file = None
+        if 'thumbnail' in request.FILES:
+            thumbnail_uploaded = request.FILES['thumbnail']
+            
+            # Validar tipo do thumbnail
+            allowed_types = ['image/jpeg', 'image/jpg', 'image/png']
+            if thumbnail_uploaded.content_type not in allowed_types:
+                return JsonResponse({'success': False, 'error': 'Thumbnail deve ser JPG, JPEG ou PNG'})
+            
+            # Validar dimensões
+            from PIL import Image
+            try:
+                img = Image.open(thumbnail_uploaded)
+                if img.width > 400 or img.height > 400:
+                    return JsonResponse({'success': False, 'error': 'Thumbnail deve ter no máximo 400x400 pixels'})
+                
+                # Renomear thumbnail com signature_thumb.extensao
+                ext = thumbnail_uploaded.name.split('.')[-1].lower()
+                new_thumb_name = f"{signature}_thumb.{ext}"
+                
+                # Recriar arquivo com novo nome
+                thumbnail_uploaded.seek(0)
+                thumb_content = thumbnail_uploaded.read()
+                thumbnail_file = InMemoryUploadedFile(
+                    file=io.BytesIO(thumb_content),
+                    field_name='thumbnail',
+                    name=new_thumb_name,
+                    content_type=thumbnail_uploaded.content_type,
+                    size=len(thumb_content),
+                    charset=None
+                )
+                
+                print(f"DEBUG: Thumbnail processado: {new_thumb_name}")
+            except Exception as e:
+                return JsonResponse({'success': False, 'error': f'Erro ao processar thumbnail: {str(e)}'})
+        
         # Criar registro no banco
         file_obj = File(
             name=file_name,
             path=uploaded_file.name,
             file=uploaded_file,
+            thumbnail=thumbnail_file,
             signature=signature,
             size=uploaded_file.size,
             visibility=visibility,
@@ -313,6 +351,7 @@ def upload_file_api(request):
         print(f"DEBUG: File field value: '{file_obj.file}'")
         print(f"DEBUG: File field path: {file_obj.file.path if file_obj.file else 'Vazio'}")
         print(f"DEBUG: File field name: {file_obj.file.name if file_obj.file else 'Vazio'}")
+        print(f"DEBUG: Thumbnail: {file_obj.thumbnail.name if file_obj.thumbnail else 'Sem thumbnail'}")
         
         # Processar tags
         tag_ids = request.POST.getlist('tags')

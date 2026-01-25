@@ -11,6 +11,7 @@ class File(models.Model):
     name = models.CharField(max_length=200, verbose_name="File Name")
     path = models.TextField(verbose_name="File Path", null=True, blank=True)
     file = models.FileField(upload_to='uploads/', null=True, blank=True, verbose_name="Arquivo")
+    thumbnail = models.ImageField(upload_to='thumbnails/', null=True, blank=True, verbose_name="Thumbnail")
     signature = models.CharField(max_length=64, verbose_name="File signature")
 
     size = models.PositiveIntegerField(
