@@ -59,8 +59,6 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('lastName').value = data.last_name || '';
         document.getElementById('username').value = data.username || '';
         document.getElementById('email').value = data.email || '';
-        document.getElementById('role').value = data.role || 'user';
-        document.getElementById('isActive').checked = data.is_active !== false;
 
         // Carregar foto se existir
         if (data.profile_photo) {
@@ -109,6 +107,34 @@ document.addEventListener('DOMContentLoaded', function() {
     form.addEventListener('submit', async function(e) {
         e.preventDefault();
 
+        // Validar senhas se estiverem preenchidas
+        const currentPasswordField = document.getElementById('currentPassword');
+        const newPasswordField = document.getElementById('newPassword');
+        const confirmPasswordField = document.getElementById('confirmPassword');
+        
+        const currentPassword = currentPasswordField ? currentPasswordField.value : '';
+        const newPassword = newPasswordField ? newPasswordField.value : '';
+        const confirmPassword = confirmPasswordField ? confirmPasswordField.value : '';
+
+        if (newPassword || confirmPassword || currentPassword) {
+            if (!currentPassword) {
+                showError('Digite sua senha atual para alterá-la');
+                return;
+            }
+            if (!newPassword) {
+                showError('Digite a nova senha');
+                return;
+            }
+            if (newPassword.length < 6) {
+                showError('A nova senha deve ter no mínimo 6 caracteres');
+                return;
+            }
+            if (newPassword !== confirmPassword) {
+                showError('As senhas não coincidem');
+                return;
+            }
+        }
+
         // Desabilitar botão
         submitBtn.disabled = true;
         submitBtn.classList.add('loading');
@@ -121,8 +147,12 @@ document.addEventListener('DOMContentLoaded', function() {
             formData.append('first_name', document.getElementById('firstName').value);
             formData.append('last_name', document.getElementById('lastName').value);
             formData.append('email', document.getElementById('email').value);
-            formData.append('role', document.getElementById('role').value);
-            formData.append('is_active', document.getElementById('isActive').checked);
+
+            // Adicionar senhas se preenchidas
+            if (currentPassword && newPassword) {
+                formData.append('current_password', currentPassword);
+                formData.append('new_password', newPassword);
+            }
 
             // Adicionar foto se selecionada
             if (profilePhotoInput.files.length > 0) {
@@ -137,13 +167,20 @@ document.addEventListener('DOMContentLoaded', function() {
                 body: formData
             });
 
+            const responseData = await response.json();
+            
             if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(JSON.stringify(errorData));
+                console.error('Erro na resposta:', responseData);
+                const errorMsg = responseData.error || responseData.message || responseData.detail || 'Erro ao atualizar perfil';
+                throw new Error(errorMsg);
             }
 
-            const responseData = await response.json();
             showSuccess(responseData.message || 'Perfil atualizado com sucesso!');
+            
+            // Limpar campos de senha se existirem
+            if (currentPasswordField) currentPasswordField.value = '';
+            if (newPasswordField) newPasswordField.value = '';
+            if (confirmPasswordField) confirmPasswordField.value = '';
             
             // Recarregar dados após sucesso
             setTimeout(() => {
@@ -152,7 +189,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         } catch (error) {
             console.error('Erro:', error);
-            showError('Erro ao atualizar perfil. Verifique os dados e tente novamente.');
+            showError(error.message || 'Erro ao atualizar perfil. Verifique os dados e tente novamente.');
         } finally {
             // Reabilitar botão
             submitBtn.disabled = false;

@@ -1,0 +1,274 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Configuração Inicial - Cloud Under Roof</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="stylesheet" href="{% static 'css/login.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body class="login-body">
+    <div class="login-container">
+        <div class="login-card">
+            <div class="login-header">
+                <img src="{% static 'img/logo2.png' %}" alt="Logo" class="login-logo">
+                <h1>Cloud Under Roof</h1>
+                <p class="setup-subtitle">Configuração Inicial do Sistema</p>
+            </div>
+
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle"></i>
+                <p>Nenhum administrador encontrado. Por favor, crie o primeiro usuário administrador do sistema.</p>
+            </div>
+
+            <form id="setupForm" class="login-form">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label for="username">Usuário: *</label>
+                    <div class="input-wrapper">
+                        <i class="fas fa-user"></i>
+                        <input 
+                            type="text" 
+                            id="username" 
+                            name="username" 
+                            placeholder="Digite o nome de usuário"
+                            class="form-input"
+                            required
+                        >
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="email">E-mail: *</label>
+                    <div class="input-wrapper">
+                        <i class="fas fa-envelope"></i>
+                        <input 
+                            type="email" 
+                            id="email" 
+                            name="email" 
+                            placeholder="Digite o e-mail"
+                            class="form-input"
+                            required
+                        >
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="first_name">Nome:</label>
+                    <div class="input-wrapper">
+                        <i class="fas fa-id-card"></i>
+                        <input 
+                            type="text" 
+                            id="first_name" 
+                            name="first_name" 
+                            placeholder="Digite o primeiro nome"
+                            class="form-input"
+                        >
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="last_name">Sobrenome:</label>
+                    <div class="input-wrapper">
+                        <i class="fas fa-id-card"></i>
+                        <input 
+                            type="text" 
+                            id="last_name" 
+                            name="last_name" 
+                            placeholder="Digite o sobrenome"
+                            class="form-input"
+                        >
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Senha: *</label>
+                    <div class="input-wrapper">
+                        <i class="fas fa-lock"></i>
+                        <input 
+                            type="password" 
+                            id="password" 
+                            name="password" 
+                            placeholder="Digite a senha"
+                            class="form-input"
+                            required
+                        >
+                        <button type="button" class="toggle-password" onclick="togglePassword('password')">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="password_confirm">Confirmar Senha: *</label>
+                    <div class="input-wrapper">
+                        <i class="fas fa-lock"></i>
+                        <input 
+                            type="password" 
+                            id="password_confirm" 
+                            name="password_confirm" 
+                            placeholder="Confirme a senha"
+                            class="form-input"
+                            required
+                        >
+                        <button type="button" class="toggle-password" onclick="togglePassword('password_confirm')">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div id="message" class="message"></div>
+
+                <button type="submit" class="login-btn">
+                    <i class="fas fa-user-plus"></i>
+                    Criar Administrador
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function togglePassword(fieldId) {
+            const field = document.getElementById(fieldId);
+            const icon = event.currentTarget.querySelector('i');
+            
+            if (field.type === 'password') {
+                field.type = 'text';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                field.type = 'password';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        }
+
+        document.getElementById('setupForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const messageDiv = document.getElementById('message');
+            const submitBtn = this.querySelector('button[type="submit"]');
+            
+            const password = document.getElementById('password').value;
+            const passwordConfirm = document.getElementById('password_confirm').value;
+            
+            if (password !== passwordConfirm) {
+                messageDiv.textContent = 'As senhas não coincidem!';
+                messageDiv.className = 'message error';
+                messageDiv.style.display = 'block';
+                return;
+            }
+            
+            if (password.length < 6) {
+                messageDiv.textContent = 'A senha deve ter no mínimo 6 caracteres!';
+                messageDiv.className = 'message error';
+                messageDiv.style.display = 'block';
+                return;
+            }
+            
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Criando...';
+            
+            const formData = new FormData(this);
+            const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+            
+            try {
+                const response = await fetch('/initial-setup', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRFToken': csrftoken,
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    messageDiv.textContent = data.message;
+                    messageDiv.className = 'message success';
+                    messageDiv.style.display = 'block';
+                    
+                    setTimeout(() => {
+                        window.location.href = data.redirect;
+                    }, 2000);
+                } else {
+                    messageDiv.textContent = data.message;
+                    messageDiv.className = 'message error';
+                    messageDiv.style.display = 'block';
+                    
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = '<i class="fas fa-user-plus"></i> Criar Administrador';
+                }
+            } catch (error) {
+                messageDiv.textContent = 'Erro ao conectar com o servidor: ' + error.message;
+                messageDiv.className = 'message error';
+                messageDiv.style.display = 'block';
+                
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fas fa-user-plus"></i> Criar Administrador';
+            }
+        });
+    </script>
+
+    <style>
+        .setup-subtitle {
+            color: #666;
+            font-size: 0.9em;
+            margin-top: 0.5rem;
+        }
+
+        .alert {
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .alert-info {
+            background-color: #e3f2fd;
+            border: 1px solid #2196f3;
+            color: #1976d2;
+        }
+
+        .alert i {
+            font-size: 1.5em;
+        }
+
+        .alert p {
+            margin: 0;
+            line-height: 1.5;
+        }
+
+        .message {
+            padding: 0.75rem;
+            margin-bottom: 1rem;
+            border-radius: 6px;
+            display: none;
+            text-align: center;
+            font-weight: 500;
+        }
+
+        .message.success {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+
+        .message.error {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+    </style>
+</body>
+</html>

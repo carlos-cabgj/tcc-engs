@@ -18,20 +18,33 @@
             </div>
 
             <form id="loginForm" class="login-form">
-                <div class="form-group">
-                    <label for="username">Usuário:</label>
-                    <div class="input-wrapper">
-                        <i class="fas fa-user"></i>
-                        <input 
-                            type="text" 
-                            id="username" 
-                            name="username" 
-                            placeholder="Digite seu usuário"
-                            class="form-input"
-                            required
-                        >
+                <!-- User Selection Grid -->
+                <div class="user-selection-container">
+                    <label class="selection-label">Selecione seu usuário:</label>
+                    <div class="users-grid" id="usersGrid">
+                        {% for user in users %}
+                        <div class="user-thumb" data-username="{{ user.username }}" onclick="selectUser(this)">
+                            <div class="thumb-image-wrapper">
+                                {% if user.profile.profile_img %}
+                                <img src="{{ user.profile.profile_img.url }}" alt="{{ user.get_full_name|default:user.username }}" class="thumb-image">
+                                {% else %}
+                                <div class="thumb-placeholder">
+                                    <i class="fas fa-user"></i>
+                                </div>
+                                {% endif %}
+                            </div>
+                            <div class="thumb-name">{{ user.get_full_name|default:user.username }}</div>
+                        </div>
+                        {% endfor %}
                     </div>
                 </div>
+
+                <input 
+                    type="hidden" 
+                    id="username" 
+                    name="username" 
+                    required
+                >
 
                 <div class="form-group">
                     <label for="password">Senha:</label>

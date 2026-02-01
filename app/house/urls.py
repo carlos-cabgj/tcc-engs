@@ -30,6 +30,7 @@ urlpatterns = [
     path("upload", views.upload_file, name="upload_file"),
     path("api/upload/", views.upload_file_api, name="upload_file_api"),
     path("login", views.login_view, name="login"),
+    path("initial-setup", views.initial_setup, name="initial_setup"),
 
     path("auth", views.auth, name="auth"),
     path("api/auth", views.auth, name="auth"),

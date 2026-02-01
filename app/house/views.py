@@ -20,6 +20,8 @@ def jwt_login_required(view_func):
     """Decorador que verifica autenticação por JWT em cookies ou header"""
     @wraps(view_func)
     def wrapper(request, *args, **kwargs):
+        import sys
+        
         # Tentar obter token do cookie ou header
         token = None
         
@@ -27,14 +29,21 @@ def jwt_login_required(view_func):
         auth_header = request.META.get('HTTP_AUTHORIZATION', '')
         if auth_header.startswith('Bearer '):
             token = auth_header.split(' ')[1]
+            print(f"[JWT] Token do header: {token[:20]}...", file=sys.stderr, flush=True)
         
         # Se não achou no header, tenta no cookie
         if not token:
             token = request.COOKIES.get('access_token')
+            if token:
+                print(f"[JWT] Token do cookie encontrado: {token[:20]}...", file=sys.stderr, flush=True)
+            else:
+                print(f"[JWT] Cookies disponíveis: {list(request.COOKIES.keys())}", file=sys.stderr, flush=True)
         
-        # Se não tem token, redireciona para login
+        # Se não tem token, redireciona para login com next parameter
         if not token:
-            return redirect('login')
+            print(f"[JWT] Nenhum token encontrado, redirecionando para login", file=sys.stderr, flush=True)
+            login_url = f'/login?next={request.path}'
+            return redirect(login_url)
         
         # Tenta validar o token
         try:
@@ -42,8 +51,19 @@ def jwt_login_required(view_func):
             validated_token = jwt_auth.get_validated_token(token)
             request.user = jwt_auth.get_user(validated_token)
             request.auth = validated_token
-        except (InvalidToken, AuthenticationFailed):
-            return redirect('login')
+            print(f"[JWT] Token válido para: {request.user.username}", file=sys.stderr, flush=True)
+        except InvalidToken as e:
+            print(f"[JWT] Token inválido: {str(e)}", file=sys.stderr, flush=True)
+            login_url = f'/login?next={request.path}'
+            return redirect(login_url)
+        except AuthenticationFailed as e:
+            print(f"[JWT] Autenticação falhou: {str(e)}", file=sys.stderr, flush=True)
+            login_url = f'/login?next={request.path}'
+            return redirect(login_url)
+        except Exception as e:
+            print(f"[JWT] Erro inesperado: {type(e).__name__} - {str(e)}", file=sys.stderr, flush=True)
+            login_url = f'/login?next={request.path}'
+            return redirect(login_url)
         
         return view_func(request, *args, **kwargs)
     
@@ -55,8 +75,96 @@ def index(request):
 
 def login_view(request):
     """View para exibir a página de login"""
-    context = {}
+    # Verificar se existe algum usuário admin ativo
+    admin_group = Group.objects.filter(name__iexact='admin').first()
+    
+    if admin_group:
+        has_active_admin = User.objects.filter(
+            groups=admin_group,
+            is_active=True
+        ).exists()
+    else:
+        has_active_admin = User.objects.filter(
+            is_staff=True,
+            is_active=True
+        ).exists()
+    
+    # Se não houver admin ativo, redirecionar para registro inicial
+    if not has_active_admin:
+        return redirect('initial_setup')
+    
+    # Buscar todos os usuários ativos para exibir na tela de login
+    users = User.objects.filter(is_active=True).select_related('profile').order_by('username')
+    
+    context = {
+        'users': users
+    }
     return render(request, 'house/login.html', context)
+
+def initial_setup(request):
+    """View para registro do primeiro usuário admin"""
+    # Verificar se já existe admin ativo
+    admin_group = Group.objects.filter(name__iexact='admin').first()
+    
+    if admin_group:
+        has_active_admin = User.objects.filter(
+            groups=admin_group,
+            is_active=True
+        ).exists()
+    else:
+        has_active_admin = User.objects.filter(
+            is_staff=True,
+            is_active=True
+        ).exists()
+    
+    # Se já existe admin, redirecionar para login
+    if has_active_admin:
+        return redirect('login')
+    
+    if request.method == 'POST':
+        username = request.POST.get('username')
+        email = request.POST.get('email')
+        password = request.POST.get('password')
+        first_name = request.POST.get('first_name', '')
+        last_name = request.POST.get('last_name', '')
+        
+        try:
+            # Criar o usuário
+            user = User.objects.create_user(
+                username=username,
+                email=email,
+                password=password,
+                first_name=first_name,
+                last_name=last_name,
+                is_staff=True,
+                is_active=True
+            )
+            
+            # Criar ou obter grupo Admin
+            admin_group, _ = Group.objects.get_or_create(name='Admin')
+            user.groups.add(admin_group)
+            
+            # Criar perfil do usuário
+            UserProfile.objects.create(
+                user=user,
+                bio=f'Administrador do sistema',
+                phone=''
+            )
+            
+            return JsonResponse({
+                'success': True,
+                'message': 'Administrador criado com sucesso! Redirecionando para login...',
+                'redirect': '/login'
+            })
+            
+        except Exception as e:
+            return JsonResponse({
+                'success': False,
+                'message': f'Erro ao criar usuário: {str(e)}'
+            }, status=400)
+    
+    context = {}
+    return render(request, 'house/initial_setup.html', context)
 
 def auth(request):
     return HttpResponse("Hello 2")

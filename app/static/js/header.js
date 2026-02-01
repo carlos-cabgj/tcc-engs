@@ -79,14 +79,16 @@ document.addEventListener('DOMContentLoaded', async function() {
 
             // Montar HTML do usuário logado
             userIconsDiv.innerHTML = `
-                <div class="user-menu" style="display: flex; align-items: center; gap: 15px;">
+                <div class="user-menu" style="display: flex; flex-direction: column; align-items: center; gap: 5px;">
                     <span style="color: white; font-size: 0.95em;">${userName}</span>
-                    <a href="/profile" title="Editar Perfil" style="color: white; text-decoration: none; margin: 0;">
-                        <img src="${photoUrl}" alt="Perfil" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 2px solid white;">
-                    </a>
-                    <button id="logoutBtn" title="Sair" style="background: none; border: none; color: white; font-size: 1.5em; cursor: pointer; margin: 0;">
-                        <i class="fas fa-sign-out-alt"></i>
-                    </button>
+                    <div style="display: flex; align-items: center; gap: 15px;">
+                        <a href="/profile" title="Editar Perfil" style="color: white; text-decoration: none; margin: 0;">
+                            <img src="${photoUrl}" alt="Perfil" style="width: 4em; height: 4em; border-radius: 50%; object-fit: cover; border: 2px solid white;">
+                        </a>
+                        <button id="logoutBtn" title="Sair" style="background: none; border: none; color: white; font-size: 1em; cursor: pointer; margin: 0;">
+                            <i class="fas fa-sign-out-alt"></i>
+                        </button>
+                    </div>
                 </div>
             `;
 

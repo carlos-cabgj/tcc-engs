@@ -6,23 +6,25 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Editar Perfil</title>
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="stylesheet" href="{% static 'css/header.css' %}">
     <link rel="stylesheet" href="{% static 'css/profile.css' %}">
+    <link rel="stylesheet" href="{% static 'css/breadcrumb.css' %}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
 <body>
     <div class="row">
-        <header class="header">
-            <div class="header-title">
-                <img src="{% static 'img/logo2.png' %}" alt="Logo" style="height: 150px;">
-            </div>
-            <div class="user-icons">
-                <i class="fas fa-user-circle"></i>
-            </div>
-        </header>
+        {% include "./partials/header.html" %}
     </div>
 
     <div id="main-container" class="row">
         <div class="container">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="/"><i class="fas fa-home"></i> Início</a></li>
+                    <li class="breadcrumb-separator">/</li>
+                    <li class="breadcrumb-item active">Editar Perfil</li>
+                </ol>
+            </nav>
             <main class="profile-main">
                 <div class="profile-card">
                     <div class="profile-header">
@@ -99,33 +101,61 @@
                             </div>
                         </div>
 
-                        <!-- Seção de Função e Status -->
+                        <!-- Seção de Alteração de Senha -->
                         <div class="form-section">
-                            <h2>Configurações de Conta</h2>
+                            <h2>Alterar Senha</h2>
+                            <small style="color: #666; display: block; margin-bottom: 1rem;">Deixe em branco se não quiser alterar a senha</small>
                             
                             <div class="form-group">
-                                <label for="role">Função:</label>
-                                <select id="role" name="role" class="form-input" required>
-                                    <option value="">Selecione uma função...</option>
-                                    <option value="admin">Administrador</option>
-                                    <option value="user">Usuário</option>
-                                    <option value="visitor">Visitante</option>
-                                </select>
+                                <label for="currentPassword">Senha Atual:</label>
+                                <div style="position: relative;">
+                                    <input 
+                                        type="password" 
+                                        id="currentPassword" 
+                                        name="current_password" 
+                                        placeholder="Digite sua senha atual"
+                                        class="form-input"
+                                    >
+                                    <button type="button" class="toggle-password-btn" onclick="togglePasswordVisibility('currentPassword')" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: #666;">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
                             </div>
 
-                            <div class="form-group checkbox-group">
-                                <label for="isActive" class="checkbox-label">
+                            <div class="form-group">
+                                <label for="newPassword">Nova Senha:</label>
+                                <div style="position: relative;">
                                     <input 
-                                        type="checkbox" 
-                                        id="isActive" 
-                                        name="is_active" 
-                                        class="form-checkbox"
+                                        type="password" 
+                                        id="newPassword" 
+                                        name="new_password" 
+                                        placeholder="Digite a nova senha (mínimo 6 caracteres)"
+                                        class="form-input"
                                     >
-                                    <span>Conta Ativa</span>
-                                </label>
-                                <small>Desmarque para desativar sua conta</small>
+                                    <button type="button" class="toggle-password-btn" onclick="togglePasswordVisibility('newPassword')" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: #666;">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="confirmPassword">Confirmar Nova Senha:</label>
+                                <div style="position: relative;">
+                                    <input 
+                                        type="password" 
+                                        id="confirmPassword" 
+                                        name="confirm_password" 
+                                        placeholder="Confirme a nova senha"
+                                        class="form-input"
+                                    >
+                                    <button type="button" class="toggle-password-btn" onclick="togglePasswordVisibility('confirmPassword')" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: #666;">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
                             </div>
                         </div>
+
+
 
                         <!-- Mensagens de Status -->
                         <div id="statusMessage" class="status-message" style="display: none;"></div>
@@ -146,6 +176,23 @@
         </div>
     </div>
 
-    <script src="{% static 'js/profile-edit.js' %}"></script>
+    <script>
+        function togglePasswordVisibility(fieldId) {
+            const field = document.getElementById(fieldId);
+            const btn = event.currentTarget;
+            const icon = btn.querySelector('i');
+            
+            if (field.type === 'password') {
+                field.type = 'text';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                field.type = 'password';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        }
+    </script>
+    <script src="{% static 'js/profile-edit.js' %}?v=3"></script>
 </body>
 </html>

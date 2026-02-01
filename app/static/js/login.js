@@ -1,3 +1,19 @@
+// Função para selecionar usuário (precisa estar no escopo global para onclick funcionar)
+function selectUser(element) {
+    // Remover seleção anterior
+    const allThumbs = document.querySelectorAll('.user-thumb');
+    allThumbs.forEach(thumb => thumb.classList.remove('selected'));
+    
+    // Adicionar seleção ao usuário clicado
+    element.classList.add('selected');
+    
+    // Preencher o input oculto com o username
+    const username = element.getAttribute('data-username');
+    document.getElementById('username').value = username;
+    
+    // Focar no campo de senha
+    document.getElementById('password').focus();
+}
 
 document.addEventListener('DOMContentLoaded', function() {
     const loginForm = document.getElementById('loginForm');
@@ -11,6 +27,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
         const username = document.getElementById('username').value;
         const password = document.getElementById('password').value;
+
+        // Validar se usuário foi selecionado
+        if (!username) {
+            showError('Por favor, selecione um usuário');
+            return;
+        }
 
         // Desabilitar botão
         submitBtn.disabled = true;
@@ -54,7 +76,15 @@ document.addEventListener('DOMContentLoaded', function() {
 
             // Redirecionar após 1.5 segundos
             setTimeout(() => {
-                window.location.href = '/';
+                // Verificar se há um parâmetro 'next' na URL
+                const urlParams = new URLSearchParams(window.location.search);
+                const nextUrl = urlParams.get('next');
+                
+                if (nextUrl && nextUrl.startsWith('/')) {
+                    window.location.href = nextUrl;
+                } else {
+                    window.location.href = '/';
+                }
             }, 1500);
 
         } catch (error) {
@@ -99,7 +129,19 @@ document.addEventListener('DOMContentLoaded', function() {
         const expires = new Date();
         expires.setTime(expires.getTime() + (days * 24 * 60 * 60 * 1000));
         const expiresString = 'expires=' + expires.toUTCString();
-        document.cookie = name + '=' + value + '; ' + expiresString + '; path=/; SameSite=Lax';
+        
+        // Definir cookie com configurações mais permissivas
+        const cookieString = `${name}=${value}; ${expiresString}; path=/; SameSite=Lax`;
+        document.cookie = cookieString;
+        
+        console.log('Cookie setado:', name);
+        console.log('Cookie string:', cookieString.substring(0, 100) + '...');
+        
+        // Verificar se foi setado
+        setTimeout(() => {
+            const check = getCookie(name);
+            console.log('Cookie verificado:', check ? 'OK' : 'FALHOU');
+        }, 100);
     }
 
     // Função para obter cookie
