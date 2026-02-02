@@ -15,7 +15,6 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    margin: 2em;
 }
 
 .container {
@@ -131,6 +130,203 @@ body {
     color: white;
 }
 
+/* Player de vídeo responsivo */
+.coreshelf {
+    width: 100%;
+    margin-bottom: 20px;
+    position: relative;
+    z-index: 1;
+    background-color: #eee;
+    min-height: 200px;
+}
+
+.coreshelf video,
+.coreshelf audio {
+    width: 100%;
+    height: auto;
+    max-width: 100%;
+    border-radius: 10px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    pointer-events: auto;
+    position: relative;
+    z-index: 10;
+    background-color: #000;
+    display: block;
+}
+
+/* Classe para ocultar players */
+.hidden-player {
+    display: none !important;
+}
+
+/* Mostrar player quando ativo */
+.coreshelf video:not(.hidden-player),
+.coreshelf audio:not(.hidden-player),
+.coreshelf #imageViewer:not(.hidden-player) {
+    display: block !important;
+}
+
+/* Garantir que os controles do vídeo/áudio sejam clicáveis */
+.coreshelf video::-webkit-media-controls,
+.coreshelf audio::-webkit-media-controls {
+    pointer-events: auto !important;
+}
+
+.coreshelf video::-webkit-media-controls-panel,
+.coreshelf audio::-webkit-media-controls-panel {
+    pointer-events: auto !important;
+}
+
+/* Visualizador de imagem */
+#imageViewer {
+    width: 100%;
+    text-align: center;
+    background-color: #000;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+#imageViewer img {
+    max-width: 100%;
+    max-height: 70vh;
+    height: auto;
+    border-radius: 5px;
+    object-fit: contain;
+}
+
+/* Player de Áudio Customizado */
+#customAudioPlayer {
+    width: 100%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 15px;
+    padding: 20px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+.audio-controls {
+    color: white;
+}
+
+.audio-info {
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.audio-info h4 {
+    margin: 0 0 15px 0;
+    font-size: 1.2em;
+    font-weight: 600;
+    color: white;
+}
+
+.audio-thumbnail {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 15px;
+}
+
+.audio-thumbnail img {
+    max-width: 200px;
+    max-height: 200px;
+    width: auto;
+    height: auto;
+    border-radius: 10px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+    object-fit: cover;
+}
+
+.audio-main-controls {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+.control-btn {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background-color: white;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.2s, box-shadow 0.2s;
+    flex-shrink: 0;
+}
+
+.control-btn:hover {
+    transform: scale(1.1);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+.control-btn i {
+    font-size: 20px;
+    color: #667eea;
+}
+
+.audio-progress-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex: 1;
+    min-width: 200px;
+}
+
+.audio-progress-container span {
+    font-size: 14px;
+    font-weight: 500;
+    min-width: 45px;
+}
+
+.audio-progress-bar {
+    flex: 1;
+    height: 8px;
+    background-color: rgba(255, 255, 255, 0.3);
+    border-radius: 10px;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+}
+
+.audio-progress-fill {
+    height: 100%;
+    background-color: white;
+    border-radius: 10px;
+    width: 0%;
+    transition: width 0.1s;
+}
+
+.audio-speed-controls {
+    display: flex;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.speed-btn {
+    padding: 8px 15px;
+    border-radius: 20px;
+    background-color: rgba(255, 255, 255, 0.2);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    color: white;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 14px;
+    transition: all 0.2s;
+}
+
+.speed-btn:hover {
+    background-color: rgba(255, 255, 255, 0.3);
+}
+
+.speed-btn.active {
+    background-color: white;
+    color: #667eea;
+    border-color: white;
+}
+
 .coreshelf h3 {
     font-size: 1.3em;
     color: #333;
@@ -150,6 +346,13 @@ body {
     text-align: center;
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
     position: relative;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.item-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
 }
 
 .item-card img {
@@ -158,6 +361,7 @@ body {
     object-fit: cover;
     border-radius: 5px;
     margin-bottom: 10px;
+    pointer-events: none;
 }
 
 .item-card h4 {
@@ -198,4 +402,131 @@ body {
     font-size: 1.8em;
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
     cursor: pointer;
+}
+
+/* Estilos para paginação */
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    margin-top: 30px;
+    flex-wrap: wrap;
+}
+
+.pagination a, .pagination span {
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    text-decoration: none;
+    color: #007bff;
+    background-color: white;
+    transition: all 0.3s ease;
+}
+
+.pagination a:hover {
+    background-color: #007bff;
+    color: white;
+    border-color: #007bff;
+}
+
+.pagination .current-page {
+    background-color: #007bff;
+    color: white;
+    border-color: #007bff;
+    font-weight: bold;
+}
+
+.pagination .disabled {
+    color: #ccc;
+    cursor: not-allowed;
+    border-color: #eee;
+}
+
+.pagination .disabled:hover {
+    background-color: white;
+    color: #ccc;
+}
+
+/* Responsividade para Mobile */
+@media (max-width: 768px) {
+    /* Container principal */
+    #main-container {
+        margin: 0.5em;
+    }
+    
+    .container {
+        width: 98%;
+    }
+    
+    /* Player de vídeo responsivo */
+    .coreshelf {
+        width: 100%;
+        margin-bottom: 20px;
+    }
+    
+    .coreshelf video {
+        width: 100% !important;
+        height: auto !important;
+        max-width: 100%;
+    }
+    
+    /* Grid de itens responsivo */
+    .item-grid {
+        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+        gap: 10px;
+    }
+    
+    .item-card {
+        padding: 10px;
+    }
+    
+    .item-card img {
+        height: 80px;
+    }
+    
+    .item-card h4 {
+        font-size: 0.9em;
+    }
+    
+    .item-card p {
+        font-size: 0.8em;
+    }
+    
+    /* Barra de pesquisa */
+    .search-bar {
+        margin-bottom: 15px;
+    }
+    
+    /* Paginação em mobile */
+    .pagination {
+        gap: 5px;
+        margin-top: 20px;
+    }
+    
+    .pagination a, .pagination span {
+        padding: 6px 10px;
+        font-size: 0.9em;
+    }
+}
+
+@media (max-width: 480px) {
+    /* Para telas muito pequenas */
+    .item-grid {
+        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+        gap: 8px;
+    }
+    
+    .item-card {
+        padding: 8px;
+    }
+    
+    .item-card img {
+        height: 70px;
+    }
+    
+    .pagination a, .pagination span {
+        padding: 5px 8px;
+        font-size: 0.85em;
+    }
 }

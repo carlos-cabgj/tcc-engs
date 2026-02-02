@@ -1,4 +1,4 @@
-from django.urls import path, include
+from django.urls import path, include, re_path
 
 from rest_framework_simplejwt.views import (
     TokenObtainPairView,
@@ -29,6 +29,10 @@ urlpatterns = [
     path("users/<int:user_id>/edit/", views.edit_user, name="edit_user"),
     path("upload", views.upload_file, name="upload_file"),
     path("api/upload/", views.upload_file_api, name="upload_file_api"),
+    
+    # Servir arquivos de mídia com suporte a Range Requests
+    re_path(r'^media/(?P<file_path>.+)$', views.serve_media_file, name='serve_media'),
+    
     path("login", views.login_view, name="login"),
     path("initial-setup", views.initial_setup, name="initial_setup"),
 

@@ -1,5 +1,22 @@
 from django.contrib.auth.models import User as DjangoUser
 from django.db import models
+import os
+import uuid
+
+
+def user_profile_photo_path(instance, filename):
+    """
+    Retorna o caminho onde a foto de perfil será salva.
+    Formato: profile_photos/<username>/<uuid>.<extensão>
+    """
+    # Obter username do usuário
+    username = instance.user.username if instance.user else 'anonymous'
+    # Gerar UUID para o arquivo
+    file_uuid = uuid.uuid4()
+    # Extrair extensão do arquivo original
+    ext = filename.split('.')[-1].lower() if '.' in filename else 'jpg'
+    # Retornar caminho: profile_photos/username/uuid.ext
+    return os.path.join('profile_photos', username, f"{file_uuid}.{ext}")
 
 
 class UserProfile(models.Model):
@@ -18,7 +35,7 @@ class UserProfile(models.Model):
         primary_key=True
     )
     profile_img = models.ImageField(
-        upload_to='profile_photos/%Y/%m/%d/',
+        upload_to=user_profile_photo_path,
         null=True,
         blank=True,
         verbose_name='Foto de Perfil'

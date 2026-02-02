@@ -41,8 +41,8 @@ document.addEventListener('DOMContentLoaded', function() {
         successMessage.style.display = 'none';
 
         try {
-            // Fazer login na API
-            const response = await fetch('/api/token/', {
+            // Fazer login na API customizada que define cookies no servidor
+            const response = await fetch('/api/auth', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -60,32 +60,31 @@ document.addEventListener('DOMContentLoaded', function() {
 
             const data = await response.json();
             
-            // Armazenar tokens
+            // Os cookies já foram definidos pelo servidor, não precisa fazer manualmente
+            console.log('Login bem-sucedido, cookies definidos pelo servidor');
+            
+            // Armazenar tokens no localStorage como backup
             const accessToken = data.access;
             const refreshToken = data.refresh;
-
-            // Armazenar em cookies
-            setCookie('access_token', accessToken, 1); // 1 dia
-            setCookie('refresh_token', refreshToken, 7); // 7 dias
-            
-            // Também armazenar em localStorage para backup
             localStorage.setItem('access_token', accessToken);
             localStorage.setItem('refresh_token', refreshToken);
 
             showSuccess('Login realizado com sucesso! Redirecionando...');
 
-            // Redirecionar após 1.5 segundos
+            // Aguardar para garantir que os cookies do servidor sejam processados
             setTimeout(() => {
                 // Verificar se há um parâmetro 'next' na URL
                 const urlParams = new URLSearchParams(window.location.search);
                 const nextUrl = urlParams.get('next');
                 
-                if (nextUrl && nextUrl.startsWith('/')) {
+                if (nextUrl && nextUrl.startsWith('/') && nextUrl !== '/login') {
+                    console.log('Redirecionando para next:', nextUrl);
                     window.location.href = nextUrl;
                 } else {
+                    console.log('Redirecionando para raiz');
                     window.location.href = '/';
                 }
-            }, 1500);
+            }, 500); // Reduzido para 500ms já que cookies são definidos pelo servidor
 
         } catch (error) {
             console.error('Erro:', error);

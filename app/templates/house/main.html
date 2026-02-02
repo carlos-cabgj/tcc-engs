@@ -36,5 +36,255 @@
             </footer> -->
         </div>
     </div>
+    
+    <script>
+        // Configuração de extensões carregada do backend
+        const extFiles = {{ ext_files|safe }};
+        
+        // Função para verificar se uma extensão pertence a uma categoria
+        function getFileCategory(extension) {
+            if (!extension) return null;
+            
+            const ext = extension.toLowerCase();
+            for (const [category, extensions] of Object.entries(extFiles)) {
+                if (extensions.includes(ext)) {
+                    return category;
+                }
+            }
+            return null;
+        }
+        
+        // Adicionar event listeners aos item-card
+        document.addEventListener('DOMContentLoaded', function() {
+            const itemCards = document.querySelectorAll('.item-card');
+            const coreshelf = document.querySelector('.coreshelf');
+            const videoPlayer = document.getElementById('videoPlayer');
+            const imageViewer = document.getElementById('imageViewer');
+            const audioPlayer = document.getElementById('audioPlayer');
+            const customAudioPlayer = document.getElementById('customAudioPlayer');
+            const playPauseBtn = document.getElementById('playPauseBtn');
+            const audioProgress = document.getElementById('audioProgress');
+            const audioProgressBar = document.querySelector('.audio-progress-bar');
+            const currentTimeEl = document.getElementById('currentTime');
+            const totalTimeEl = document.getElementById('totalTime');
+            const audioTitle = document.getElementById('audioTitle');
+            const audioThumbnail = document.getElementById('audioThumbnail');
+            const speedBtns = document.querySelectorAll('.speed-btn');
+            
+            // Função para formatar tempo em MM:SS
+            function formatTime(seconds) {
+                const mins = Math.floor(seconds / 60);
+                const secs = Math.floor(seconds % 60);
+                return `${mins}:${secs.toString().padStart(2, '0')}`;
+            }
+            
+            // Controles do player de áudio
+            playPauseBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                if (audioPlayer.paused) {
+                    audioPlayer.play();
+                    this.innerHTML = '<i class="fas fa-pause"></i>';
+                } else {
+                    audioPlayer.pause();
+                    this.innerHTML = '<i class="fas fa-play"></i>';
+                }
+            });
+            
+            // Atualizar progresso do áudio
+            const updateProgress = function() {
+                const progress = (audioPlayer.currentTime / audioPlayer.duration) * 100;
+                audioProgress.style.width = progress + '%';
+                currentTimeEl.textContent = formatTime(audioPlayer.currentTime);
+            };
+            
+            audioPlayer.addEventListener('timeupdate', updateProgress);
+            
+            // Atualizar tempo total quando metadados carregarem
+            audioPlayer.addEventListener('loadedmetadata', function() {
+                totalTimeEl.textContent = formatTime(audioPlayer.duration);
+            });
+            
+            // Debug: Monitorar quando load() é chamado
+            audioPlayer.addEventListener('loadstart', function() {
+                console.log('🔴 audioPlayer.load() foi chamado!');
+            });
+            
+            // Bloquear propagação de cliques no player de áudio (bubbling phase)
+            customAudioPlayer.addEventListener('click', function(e) {
+                e.stopPropagation();
+            });
+            
+            // Clicar na barra de progresso
+            audioProgressBar.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                e.stopImmediatePropagation();
+                
+                const rect = this.getBoundingClientRect();
+                const percent = (e.clientX - rect.left) / rect.width;
+                const newTime = percent * audioPlayer.duration;
+                
+                // Verificar se o áudio está pronto para seek
+                if (audioPlayer.readyState < 2 || isNaN(newTime) || !isFinite(newTime)) {
+                    return false;
+                }
+                
+                const wasPlaying = !audioPlayer.paused;
+                
+                // Remover temporariamente o listener de timeupdate
+                audioPlayer.removeEventListener('timeupdate', updateProgress);
+                
+                // Pausar antes de fazer o seek
+                if (wasPlaying) {
+                    audioPlayer.pause();
+                }
+                
+                // Aguardar um pouco para garantir que o pause foi processado
+                setTimeout(() => {
+                    // Fazer o seek
+                    audioPlayer.currentTime = newTime;
+                    
+                    // Usar seeked para reativar tudo após o seek
+                    const onSeeked = function() {
+                        // Reativar o listener de timeupdate
+                        audioPlayer.addEventListener('timeupdate', updateProgress);
+                        
+                        // Retomar reprodução se estava tocando
+                        if (wasPlaying) {
+                            audioPlayer.play();
+                        }
+                        
+                        audioPlayer.removeEventListener('seeked', onSeeked);
+                    };
+                    
+                    audioPlayer.addEventListener('seeked', onSeeked, { once: true });
+                }, 50);
+                
+                return false;
+            }, true);
+            
+            // Controles de velocidade
+            speedBtns.forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const speed = parseFloat(this.dataset.speed);
+                    audioPlayer.playbackRate = speed;
+                    speedBtns.forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                });
+            });
+            
+            // Resetar botão play/pause quando áudio terminar
+            audioPlayer.addEventListener('ended', function() {
+                playPauseBtn.innerHTML = '<i class="fas fa-play"></i>';
+            });
+            
+            // Função para ocultar todos os players usando classes CSS
+            function hideAllPlayers() {
+                // Pausar vídeo e resetar
+                if (!videoPlayer.paused) {
+                    videoPlayer.pause();
+                }
+                videoPlayer.currentTime = 0;
+                videoPlayer.classList.add('hidden-player');
+                
+                // Pausar áudio e resetar
+                if (!audioPlayer.paused) {
+                    audioPlayer.pause();
+                }
+                audioPlayer.currentTime = 0;
+                customAudioPlayer.classList.add('hidden-player');
+                playPauseBtn.innerHTML = '<i class="fas fa-play"></i>';
+                
+                // Ocultar visualizador de imagem
+                imageViewer.classList.add('hidden-player');
+            }
+            
+            // Prevenir que cliques nos players sejam propagados para outros elementos
+            // Usando capture phase para interceptar antes de outros listeners
+            coreshelf.addEventListener('click', function(e) {
+                // Se o clique foi dentro de um player de vídeo, parar propagação
+                if (e.target.closest('video') || e.target === videoPlayer) {
+                    e.stopPropagation();
+                    return;
+                }
+            }, true); // true = capturar na fase de captura
+            
+            itemCards.forEach(card => {
+                card.addEventListener('click', function(e) {
+                    // Verificar se o clique veio de dentro do player de áudio
+                    if (e.target.closest('#customAudioPlayer')) {
+                        return;
+                    }
+                    
+                    const extension = this.getAttribute('data-extension');
+                    const fileUrl = this.getAttribute('data-file-url');
+                    
+                    if (!extension || !fileUrl) return;
+                    
+                    const category = getFileCategory(extension);
+                    
+                    // Ocultar todos os players primeiro
+                    hideAllPlayers();
+                    
+                    if (category === 'video') {
+                        // Abrir vídeo no player
+                        const source = videoPlayer.querySelector('source');
+                        source.src = fileUrl;
+                        source.type = `video/${extension}`;
+                        videoPlayer.classList.remove('hidden-player');
+                        videoPlayer.load();
+                        // Aguardar o carregamento antes de reproduzir (importante para Tizen)
+                        videoPlayer.addEventListener('loadedmetadata', function() {
+                            videoPlayer.play().catch(function(error) {
+                                console.log('Erro ao reproduzir:', error);
+                            });
+                        }, { once: true });
+                        coreshelf.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    } else if (category === 'image') {
+                        // Exibir imagem no visualizador
+                        const img = imageViewer.querySelector('img');
+                        img.src = fileUrl;
+                        img.alt = this.querySelector('h4').textContent;
+                        imageViewer.classList.remove('hidden-player');
+                        coreshelf.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    } else if (category === 'audio') {
+                        // Reproduzir áudio no player customizado
+                        const fileName = this.querySelector('h4').textContent;
+                        audioTitle.textContent = fileName;
+                        
+                        // Pegar thumbnail do card
+                        const thumbnailImg = this.querySelector('img');
+                        if (thumbnailImg) {
+                            audioThumbnail.src = thumbnailImg.src;
+                            audioThumbnail.alt = fileName;
+                        }
+                        
+                        const source = audioPlayer.querySelector('source');
+                        source.src = fileUrl;
+                        source.type = `audio/${extension}`;
+                        customAudioPlayer.classList.remove('hidden-player');
+                        audioPlayer.load();
+                        
+                        // Resetar velocidade para 1x
+                        audioPlayer.playbackRate = 1;
+                        speedBtns.forEach(b => b.classList.remove('active'));
+                        speedBtns[0].classList.add('active');
+                        
+                        audioPlayer.addEventListener('loadedmetadata', function() {
+                            audioPlayer.play().catch(function(error) {
+                                console.log('Erro ao reproduzir:', error);
+                            });
+                            playPauseBtn.innerHTML = '<i class="fas fa-pause"></i>';
+                        }, { once: true });
+                        coreshelf.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    } else {
+                        // Para outros tipos, fazer download
+                        window.location.href = fileUrl;
+                    }
+                });
+            });
+        });
+    </script>
 </body>
 </html>

@@ -460,7 +460,7 @@
                                 <input type="file" id="thumbnailInput" name="thumbnail" accept="image/jpeg,image/jpg,image/png">
                                 <label for="thumbnailInput" class="file-input-label">
                                     <i class="fas fa-image"></i>
-                                    <span id="thumbnailLabel">Selecione uma imagem (JPG, PNG - máx 400x400)</span>
+                                    <span id="thumbnailLabel">Selecione uma imagem (JPG, PNG, WebP - será redimensionada para 400x400)</span>
                                 </label>
                             </div>
                             <div class="file-name-display" id="thumbnailName"></div>
@@ -723,29 +723,26 @@
                 const file = this.files[0];
                 
                 // Validar tipo
-                const validTypes = ['image/jpeg', 'image/jpg', 'image/png'];
+                const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
                 if (!validTypes.includes(file.type)) {
-                    errorEl.textContent = 'Apenas arquivos JPG, JPEG ou PNG são permitidos';
+                    errorEl.textContent = 'Apenas arquivos JPG, JPEG, PNG ou WebP são permitidos';
                     errorEl.classList.add('show');
                     this.value = '';
                     thumbnailPreview.style.display = 'none';
                     return;
                 }
                 
-                // Validar dimensões
+                // Mostrar prévia e informações da imagem
                 const img = new Image();
                 img.onload = function() {
+                    let dimensionInfo = `${img.width}x${img.height}`;
                     if (img.width > 400 || img.height > 400) {
-                        errorEl.textContent = 'A imagem deve ter no máximo 400x400 pixels';
-                        errorEl.classList.add('show');
-                        thumbnailInput.value = '';
-                        thumbnailPreview.style.display = 'none';
-                    } else {
-                        thumbnailNameDisplay.textContent = `✓ Thumbnail: ${file.name} (${img.width}x${img.height})`;
-                        thumbnailNameDisplay.classList.add('show');
-                        thumbnailPreviewImg.src = URL.createObjectURL(file);
-                        thumbnailPreview.style.display = 'block';
+                        dimensionInfo += ' → será redimensionada';
                     }
+                    thumbnailNameDisplay.textContent = `✓ Thumbnail: ${file.name} (${dimensionInfo})`;
+                    thumbnailNameDisplay.classList.add('show');
+                    thumbnailPreviewImg.src = URL.createObjectURL(file);
+                    thumbnailPreview.style.display = 'block';
                 };
                 img.src = URL.createObjectURL(file);
             } else {
