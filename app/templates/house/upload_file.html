@@ -425,15 +425,14 @@
                         <!-- Campo de Nome -->
                         <div class="form-group">
                             <label for="fileName">
-                                Nome do Arquivo <span class="required">*</span>
+                                Nome do Arquivo <span style="color: #7f8c8d; font-weight: normal; font-size: 0.9em;">(opcional - usa nome original se vazio)</span>
                             </label>
                             <input 
                                 type="text" 
                                 id="fileNameInput" 
                                 name="file_name" 
                                 class="text-input" 
-                                placeholder="Digite o nome do arquivo"
-                                required
+                                placeholder="Digite o nome ou deixe vazio para usar o nome original"
                             >
                             <div class="error-message" id="fileNameError"></div>
                         </div>
@@ -702,6 +701,20 @@
                 fileNameDisplay.textContent = `✓ Arquivo selecionado: ${this.files[0].name}`;
                 fileNameDisplay.classList.add('show');
                 fileLabel.innerHTML = `<i class="fas fa-check-circle" style="color: #27ae60;"></i><span>${this.files[0].name}</span>`;
+                
+                // Auto-preencher nome se estiver vazio
+                if (!fileNameInput.value.trim()) {
+                    const originalName = this.files[0].name;
+                    let nameWithoutExt = originalName;
+                    
+                    // Remover extensão
+                    if (originalName.includes('.')) {
+                        nameWithoutExt = originalName.substring(0, originalName.lastIndexOf('.'));
+                    }
+                    
+                    fileNameInput.value = nameWithoutExt;
+                    fileNameInput.placeholder = `Nome padrão: ${nameWithoutExt}`;
+                }
             } else {
                 fileNameDisplay.classList.remove('show');
                 fileLabel.innerHTML = `<i class="fas fa-paperclip"></i><span>Selecione ou arraste um arquivo</span>`;
@@ -768,11 +781,16 @@
                 hasErrors = true;
             }
             
-            // Validar nome do arquivo
-            if (!fileNameInput.value.trim()) {
-                document.getElementById('fileNameError').textContent = 'Nome do arquivo não pode estar vazio';
-                document.getElementById('fileNameError').classList.add('show');
-                hasErrors = true;
+            // Se nome estiver vazio, usar nome original do arquivo sem extensão
+            let fileName = fileNameInput.value.trim();
+            if (!fileName && fileInput.files && fileInput.files[0]) {
+                const originalName = fileInput.files[0].name;
+                // Remover extensão
+                if (originalName.includes('.')) {
+                    fileName = originalName.substring(0, originalName.lastIndexOf('.'));
+                } else {
+                    fileName = originalName;
+                }
             }
             
             // Validar visibilidade
@@ -793,7 +811,7 @@
             // Enviar arquivo
             const formData = new FormData();
             formData.append('file', fileInput.files[0]);
-            formData.append('file_name', fileNameInput.value.trim());
+            formData.append('file_name', fileName);
             formData.append('visibility', visibilitySelect.value);
             
             // Adicionar thumbnail se existir

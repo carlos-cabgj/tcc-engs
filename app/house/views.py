@@ -636,10 +636,22 @@ def upload_file_api(request):
     if 'file' not in request.FILES:
         return JsonResponse({'success': False, 'error': 'Arquivo não fornecido'})
     
-    # Validar nome do arquivo
+    # Obter arquivo para extrair nome original se necessário
+    uploaded_file = request.FILES['file']
+    
+    # Validar nome do arquivo - se vazio, usar nome original sem extensão
     file_name = request.POST.get('file_name', '').strip()
     if not file_name:
-        return JsonResponse({'success': False, 'error': 'Nome do arquivo não pode estar vazio'})
+        # Extrair nome do arquivo sem extensão
+        original_name = uploaded_file.name
+        if '.' in original_name:
+            file_name = '.'.join(original_name.split('.')[:-1])  # Remove a extensão
+        else:
+            file_name = original_name
+        
+        # Se ainda estiver vazio, retornar erro
+        if not file_name:
+            return JsonResponse({'success': False, 'error': 'Nome do arquivo não pode estar vazio'})
     
     # Validar visibilidade
     visibility = request.POST.get('visibility', 'users').strip()
@@ -656,9 +668,6 @@ def upload_file_api(request):
     os.makedirs(user_thumbnail_dir, exist_ok=True)
     
     print(f"DEBUG: Pasta do usuário criada/verificada: {user_upload_dir}")
-    
-    # Obter arquivo
-    uploaded_file = request.FILES['file']
     
     # Gerar signature (hash do arquivo)
     file_signature = hashlib.sha256()

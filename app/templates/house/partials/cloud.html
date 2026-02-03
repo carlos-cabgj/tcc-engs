@@ -45,13 +45,63 @@
                 </div>
             </div>
         </div>
+        
+        <!-- Botão de reprodução automática -->
+        <div style="text-align: center; margin: 15px 0;">
+            <button id="autoPlayBtn" class="auto-play-button" title="Toque todos os itens dessa busca" alt="Toque todos os itens dessa busca">
+                <i class="fas fa-play"></i>
+                <span>Toque todos os itens dessa busca</span>
+            </button>
+        </div>
+        
+        <style>
+            .auto-play-button {
+                padding: 12px 24px;
+                background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+                color: white;
+                border: none;
+                border-radius: 8px;
+                font-size: 1rem;
+                font-weight: 500;
+                cursor: pointer;
+                display: inline-flex;
+                align-items: center;
+                gap: 10px;
+                box-shadow: 0 4px 12px rgba(44, 62, 80, 0.3);
+                transition: all 0.3s ease;
+            }
+            .auto-play-button:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 6px 16px rgba(44, 62, 80, 0.4);
+                background: linear-gradient(135deg, #1a252f 0%, #2c3e50 100%);
+            }
+            .auto-play-button:active {
+                transform: translateY(0);
+            }
+            .auto-play-button.playing {
+                background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+            }
+            .auto-play-button.playing:hover {
+                background: linear-gradient(135deg, #c0392b 0%, #a93226 100%);
+            }
+            .auto-play-button i {
+                font-size: 1.1rem;
+            }
+        </style>
+        
         <div class="video-shelf">
             <h3>Prateleira</h3>
    
                 <div style="margin-bottom: 5px;">
                     <label for="search-input" style="font-weight: 500; color: #555; font-size: 0.9rem; margin-bottom: 5px; display: block;">Pesquise um termo ou data</label>
-                    <form method="get" action="" class="search-bar">
+                    <form method="get" action="" class="search-bar" id="main-search-form">
                         <input type="text" id="search-input" name="search" placeholder="Buscar por nome ou data (yyyy-mm-dd)" value="{{ search_query }}">
+                        {% for tag in selected_tags %}
+                        <input type="hidden" name="tags" value="{{ tag }}">
+                        {% endfor %}
+                        {% if tag_operator %}
+                        <input type="hidden" name="tag_operator" value="{{ tag_operator }}">
+                        {% endif %}
                         <button type="submit"><i class="fas fa-search"></i></button>
                     </form>
                 </div>
@@ -60,6 +110,12 @@
                     <label for="tag-search-input" style="font-weight: 500; color: #555; font-size: 0.9rem; margin-bottom: 5px; display: block;">Tags</label>
                     <form method="get" action="" class="tag-search-bar" style="position: relative;">
                         <input type="hidden" name="search" value="{{ search_query }}">
+                        {% for tag in selected_tags %}
+                        <input type="hidden" name="tags" value="{{ tag }}">
+                        {% endfor %}
+                        {% if tag_operator %}
+                        <input type="hidden" name="tag_operator" value="{{ tag_operator }}">
+                        {% endif %}
                         <input type="text" 
                                id="tag-search-input"
                                name="tag" 
@@ -291,6 +347,12 @@
                     urlParams.delete('tags');
                     tags.filter(t => t !== tagName).forEach(t => urlParams.append('tags', t));
                     
+                    // Preservar termo de busca se existir
+                    const searchTerm = urlParams.get('search');
+                    if (searchTerm) {
+                        urlParams.set('search', searchTerm);
+                    }
+                    
                     const newUrl = window.location.pathname + (urlParams.toString() ? '?' + urlParams.toString() : '');
                     window.location.href = newUrl;
                 }
@@ -302,6 +364,12 @@
                     const newOperator = currentOperator === 'or' ? 'and' : 'or';
                     
                     urlParams.set('tag_operator', newOperator);
+                    
+                    // Preservar termo de busca se existir
+                    const searchTerm = urlParams.get('search');
+                    if (searchTerm) {
+                        urlParams.set('search', searchTerm);
+                    }
                     
                     const newUrl = window.location.pathname + '?' + urlParams.toString();
                     window.location.href = newUrl;
@@ -377,6 +445,12 @@
                         // Verificar se a tag já não foi adicionada
                         if (!existingTags.includes(tagName)) {
                             urlParams.append('tags', tagName);
+                        }
+                        
+                        // Preservar termo de busca se existir
+                        const searchTerm = urlParams.get('search');
+                        if (searchTerm) {
+                            urlParams.set('search', searchTerm);
                         }
                         
                         const newUrl = window.location.pathname + '?' + urlParams.toString();
@@ -527,3 +601,172 @@
                 {% endif %}
             </div>
             {% endif %}
+<script>
+// Sistema de reprodução automática de itens
+(function() {
+    const autoPlayBtn = document.getElementById('autoPlayBtn');
+    const videoPlayer = document.getElementById('videoPlayer');
+    const audioPlayer = document.getElementById('audioPlayer');
+    const imageViewer = document.getElementById('imageViewer');
+    
+    let isAutoPlaying = false;
+    let currentIndex = 0;
+    let itemCards = [];
+    let imageTimeout = null;
+    
+    if (!autoPlayBtn) return;
+    
+    // Função para obter categoria do arquivo
+    function getFileCategory(extension) {
+        if (!extension) return null;
+        const ext = extension.toLowerCase();
+        for (const [category, extensions] of Object.entries(extFiles)) {
+            if (extensions.includes(ext)) {
+                return category;
+            }
+        }
+        return null;
+    }
+    
+    // Função para parar reprodução automática
+    function stopAutoPlay() {
+        isAutoPlaying = false;
+        currentIndex = 0;
+        
+        // Limpar timeout de imagem
+        if (imageTimeout) {
+            clearTimeout(imageTimeout);
+            imageTimeout = null;
+        }
+        
+        // Remover event listeners
+        if (videoPlayer) {
+            videoPlayer.removeEventListener('ended', playNext);
+        }
+        if (audioPlayer) {
+            audioPlayer.removeEventListener('ended', playNext);
+        }
+        
+        // Atualizar botão
+        autoPlayBtn.classList.remove('playing');
+        autoPlayBtn.innerHTML = '<i class="fas fa-play"></i><span>Toque todos os itens dessa busca</span>';
+        
+        console.log('Reprodução automática parada');
+    }
+    
+    // Função para reproduzir próximo item
+    function playNext() {
+        if (!isAutoPlaying) return;
+        
+        currentIndex++;
+        
+        if (currentIndex >= itemCards.length) {
+            console.log('Todos os itens foram reproduzidos');
+            stopAutoPlay();
+            return;
+        }
+        
+        playItem(currentIndex);
+    }
+    
+    // Função para reproduzir um item específico
+    function playItem(index) {
+        if (index >= itemCards.length) {
+            stopAutoPlay();
+            return;
+        }
+        
+        const card = itemCards[index];
+        const extension = card.dataset.extension;
+        const fileUrl = card.dataset.fileUrl;
+        const category = getFileCategory(extension);
+        
+        console.log(`Reproduzindo item ${index + 1}/${itemCards.length}: ${extension} (${category})`);
+        
+        // Limpar timeout anterior se existir
+        if (imageTimeout) {
+            clearTimeout(imageTimeout);
+            imageTimeout = null;
+        }
+        
+        // Simular clique no card para abrir o player
+        card.click();
+        
+        // Aguardar um pouco para o player carregar
+        setTimeout(() => {
+            if (category === 'video') {
+                // Para vídeos, esperar terminar
+                if (videoPlayer && !videoPlayer.classList.contains('hidden-player')) {
+                    videoPlayer.removeEventListener('ended', playNext);
+                    videoPlayer.addEventListener('ended', playNext, { once: true });
+                    videoPlayer.play().catch(err => {
+                        console.error('Erro ao reproduzir vídeo:', err);
+                        playNext();
+                    });
+                } else {
+                    playNext();
+                }
+            } else if (category === 'audio') {
+                // Para áudios, esperar terminar
+                if (audioPlayer && !audioPlayer.paused) {
+                    audioPlayer.removeEventListener('ended', playNext);
+                    audioPlayer.addEventListener('ended', playNext, { once: true });
+                } else {
+                    playNext();
+                }
+            } else if (category === 'image') {
+                // Para imagens, mostrar por 10 segundos
+                console.log('Imagem será exibida por 10 segundos');
+                imageTimeout = setTimeout(() => {
+                    playNext();
+                }, 10000);
+            } else {
+                // Para outros tipos, pular
+                console.log('Tipo não suportado, pulando...');
+                setTimeout(playNext, 500);
+            }
+        }, 500);
+    }
+    
+    // Iniciar reprodução automática
+    function startAutoPlay() {
+        // Coletar todos os item-cards
+        itemCards = Array.from(document.querySelectorAll('.item-card')).filter(card => {
+            return card.dataset.extension && card.dataset.fileUrl;
+        });
+        
+        if (itemCards.length === 0) {
+            alert('Nenhum item disponível para reprodução');
+            return;
+        }
+        
+        console.log(`Iniciando reprodução automática de ${itemCards.length} itens`);
+        
+        isAutoPlaying = true;
+        currentIndex = 0;
+        
+        // Atualizar botão
+        autoPlayBtn.classList.add('playing');
+        autoPlayBtn.innerHTML = '<i class="fas fa-stop"></i><span>Parar reprodução automática</span>';
+        
+        // Iniciar com o primeiro item
+        playItem(0);
+    }
+    
+    // Event listener do botão
+    autoPlayBtn.addEventListener('click', function() {
+        if (isAutoPlaying) {
+            stopAutoPlay();
+        } else {
+            startAutoPlay();
+        }
+    });
+    
+    // Parar se o usuário navegar para outra página
+    window.addEventListener('beforeunload', function() {
+        if (isAutoPlaying) {
+            stopAutoPlay();
+        }
+    });
+})();
+</script>
