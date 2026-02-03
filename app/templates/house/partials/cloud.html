@@ -48,10 +48,425 @@
         <div class="video-shelf">
             <h3>Prateleira</h3>
    
-                <form method="get" action="" class="search-bar">
-                    <input type="text" name="search" placeholder="Buscar por nome, tag ou data (yyyy-mm-dd)" value="{{ search_query }}">
-                    <button type="submit"><i class="fas fa-search"></i></button>
-                </form>
+                <div style="margin-bottom: 5px;">
+                    <label for="search-input" style="font-weight: 500; color: #555; font-size: 0.9rem; margin-bottom: 5px; display: block;">Pesquise um termo ou data</label>
+                    <form method="get" action="" class="search-bar">
+                        <input type="text" id="search-input" name="search" placeholder="Buscar por nome ou data (yyyy-mm-dd)" value="{{ search_query }}">
+                        <button type="submit"><i class="fas fa-search"></i></button>
+                    </form>
+                </div>
+                
+                <div style="margin-top: 15px;">
+                    <label for="tag-search-input" style="font-weight: 500; color: #555; font-size: 0.9rem; margin-bottom: 5px; display: block;">Tags</label>
+                    <form method="get" action="" class="tag-search-bar" style="position: relative;">
+                        <input type="hidden" name="search" value="{{ search_query }}">
+                        <input type="text" 
+                               id="tag-search-input"
+                               name="tag" 
+                               placeholder="Buscar por tag" 
+                               value="" 
+                               autocomplete="off">
+                        <button type="submit" style="display: none;"><i class="fas fa-tag"></i></button>
+                        <div id="tag-autocomplete" class="tag-autocomplete-dropdown"></div>
+                    </form>
+                </div>
+                
+                <!-- Tags selecionadas -->
+                <div id="selected-tags-container" class="selected-tags-container" style="margin-top: 10px;">
+                    {% if selected_tags %}
+                        {% for tag in selected_tags %}
+                        <div class="selected-tag" data-tag="{{ tag }}">
+                            <i class="fas fa-tag"></i> {{ tag }}
+                            <button type="button" class="remove-tag-btn" onclick="removeTag('{{ tag }}')" title="Remover tag">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                        {% endfor %}
+                        
+                        <!-- Switch AND/OR -->
+                        <div class="tag-operator-switch" style="display: flex; align-items: center; gap: 8px; margin-left: 10px;">
+                            <label class="switch-label" style="display: flex; align-items: center; gap: 5px; font-size: 0.85rem; color: #666;">
+                                <span class="operator-text" style="font-weight: 500;">{{ tag_operator|upper }}</span>
+                                <div class="toggle-switch" onclick="toggleOperator()">
+                                    <input type="checkbox" id="operator-toggle" {% if tag_operator == 'and' %}checked{% endif %} style="display: none;">
+                                    <span class="toggle-slider"></span>
+                                </div>
+                            </label>
+                        </div>
+                    {% endif %}
+                </div>
+                
+                {% if top_tags %}
+                <div class="top-tags-suggestions" style="margin: 15px 0; display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
+                    <span style="font-size: 0.9rem; color: #666; font-weight: 500;">Tags populares:</span>
+                    {% for tag in top_tags %}
+                    <a href="?tags={{ tag.name|urlencode }}{% if search_query %}&search={{ search_query|urlencode }}{% endif %}{% for t in selected_tags %}&tags={{ t|urlencode }}{% endfor %}{% if tag_operator %}&tag_operator={{ tag_operator }}{% endif %}" 
+                       class="tag-suggestion"
+                       style="padding: 5px 12px; background: #e3f2fd; color: #1976d2; text-decoration: none; border-radius: 15px; font-size: 0.85rem; transition: all 0.2s;">
+                        <i class="fas fa-tag" style="font-size: 0.75rem;"></i> {{ tag.name }} <span style="opacity: 0.7;">({{ tag.countUses }})</span>
+                    </a>
+                    {% endfor %}
+                </div>
+                <style>
+                    .tag-suggestion:hover {
+                        background: #1976d2;
+                        color: white;
+                        transform: scale(1.05);
+                    }
+                    .tag-search-bar {
+                        display: flex;
+                        gap: 5px;
+                        position: relative;
+                    }
+                    .tag-search-bar input[type="text"] {
+                        flex: 1;
+                        padding: 8px 12px;
+                        border: 2px solid #ddd;
+                        border-radius: 4px;
+                        font-size: 1rem;
+                    }
+                    .tag-search-bar button {
+                        padding: 8px 16px;
+                        background: #1976d2;
+                        color: white;
+                        border: none;
+                        border-radius: 4px;
+                        cursor: pointer;
+                        transition: background 0.2s;
+                    }
+                    .tag-search-bar button:hover {
+                        background: #1565c0;
+                    }
+                    .tag-autocomplete-dropdown {
+                        position: absolute;
+                        top: 100%;
+                        left: 0;
+                        right: 50px;
+                        background: white;
+                        border: 1px solid #ddd;
+                        border-radius: 4px;
+                        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                        max-height: 250px;
+                        overflow-y: auto;
+                        z-index: 1000;
+                        display: none;
+                        margin-top: 2px;
+                    }
+                    .tag-autocomplete-dropdown.active {
+                        display: block;
+                    }
+                    .tag-autocomplete-item {
+                        padding: 10px 12px;
+                        cursor: pointer;
+                        border-bottom: 1px solid #f0f0f0;
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: center;
+                        transition: background 0.2s;
+                    }
+                    .tag-autocomplete-item:last-child {
+                        border-bottom: none;
+                    }
+                    .tag-autocomplete-item:hover,
+                    .tag-autocomplete-item.selected {
+                        background: #e3f2fd;
+                    }
+                    .tag-autocomplete-item .tag-name {
+                        font-weight: 500;
+                        color: #333;
+                    }
+                    .tag-autocomplete-item .tag-count {
+                        font-size: 0.85rem;
+                        color: #666;
+                        background: #f5f5f5;
+                        padding: 2px 8px;
+                        border-radius: 10px;
+                    }
+                    .tag-autocomplete-loading {
+                        padding: 10px;
+                        text-align: center;
+                        color: #666;
+                    }
+                    .tag-autocomplete-empty {
+                        padding: 10px;
+                        text-align: center;
+                        color: #999;
+                    }
+                    .selected-tags-container {
+                        display: flex;
+                        gap: 8px;
+                        flex-wrap: wrap;
+                        align-items: center;
+                    }
+                    .selected-tags-container:empty {
+                        display: none;
+                    }
+                    .selected-tag {
+                        display: inline-flex;
+                        align-items: center;
+                        gap: 6px;
+                        padding: 6px 10px;
+                        background: #1976d2;
+                        color: white;
+                        border-radius: 20px;
+                        font-size: 0.9rem;
+                        font-weight: 500;
+                        box-shadow: 0 2px 4px rgba(25, 118, 210, 0.3);
+                    }
+                    .selected-tag i.fa-tag {
+                        font-size: 0.8rem;
+                    }
+                    .remove-tag-btn {
+                        background: rgba(255, 255, 255, 0.2);
+                        border: none;
+                        color: white;
+                        width: 18px;
+                        height: 18px;
+                        border-radius: 50%;
+                        cursor: pointer;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        padding: 0;
+                        transition: background 0.2s;
+                    }
+                    .remove-tag-btn:hover {
+                        background: rgba(255, 255, 255, 0.4);
+                    }
+                    .remove-tag-btn i {
+                        font-size: 0.7rem;
+                    }
+                    .tag-operator-switch {
+                        display: inline-flex;
+                        align-items: center;
+                    }
+                    .toggle-switch {
+                        position: relative;
+                        display: inline-block;
+                        width: 40px;
+                        height: 20px;
+                        cursor: pointer;
+                    }
+                    .toggle-slider {
+                        position: absolute;
+                        cursor: pointer;
+                        top: 0;
+                        left: 0;
+                        right: 0;
+                        bottom: 0;
+                        background-color: #4CAF50;
+                        transition: .3s;
+                        border-radius: 20px;
+                    }
+                    .toggle-slider:before {
+                        position: absolute;
+                        content: "";
+                        height: 14px;
+                        width: 14px;
+                        left: 3px;
+                        bottom: 3px;
+                        background-color: white;
+                        transition: .3s;
+                        border-radius: 50%;
+                    }
+                    #operator-toggle:checked + .toggle-slider {
+                        background-color: #2196F3;
+                    }
+                    #operator-toggle:checked + .toggle-slider:before {
+                        transform: translateX(20px);
+                    }
+                    .operator-text {
+                        min-width: 30px;
+                        text-align: center;
+                    }
+                </style>
+                
+                <script>
+                // Função global para remover tag
+                function removeTag(tagName) {
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const tags = urlParams.getAll('tags');
+                    
+                    // Remover a tag específica
+                    urlParams.delete('tags');
+                    tags.filter(t => t !== tagName).forEach(t => urlParams.append('tags', t));
+                    
+                    const newUrl = window.location.pathname + (urlParams.toString() ? '?' + urlParams.toString() : '');
+                    window.location.href = newUrl;
+                }
+                
+                // Função global para alternar operador
+                function toggleOperator() {
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const currentOperator = urlParams.get('tag_operator') || 'or';
+                    const newOperator = currentOperator === 'or' ? 'and' : 'or';
+                    
+                    urlParams.set('tag_operator', newOperator);
+                    
+                    const newUrl = window.location.pathname + '?' + urlParams.toString();
+                    window.location.href = newUrl;
+                }
+                
+                (function() {
+                    const input = document.getElementById('tag-search-input');
+                    const dropdown = document.getElementById('tag-autocomplete');
+                    const selectedTagsContainer = document.getElementById('selected-tags-container');
+                    let debounceTimer;
+                    let selectedIndex = -1;
+                    let currentResults = [];
+                    
+                    if (!input || !dropdown) return;
+                    
+                    // Função para buscar tags
+                    async function searchTags(query) {
+                        if (query.length < 1) {
+                            hideDropdown();
+                            return;
+                        }
+                        
+                        try {
+                            const response = await fetch(`/api/tags/?search=${encodeURIComponent(query)}`);
+                            if (!response.ok) throw new Error('Erro ao buscar tags');
+                            
+                            const data = await response.json();
+                            currentResults = data.results || data;
+                            displayResults(currentResults);
+                        } catch (error) {
+                            console.error('Erro ao buscar tags:', error);
+                            dropdown.innerHTML = '<div class="tag-autocomplete-empty">Erro ao buscar tags</div>';
+                            dropdown.classList.add('active');
+                        }
+                    }
+                    
+                    // Função para exibir resultados
+                    function displayResults(results) {
+                        if (results.length === 0) {
+                            dropdown.innerHTML = '<div class="tag-autocomplete-empty">Nenhuma tag encontrada</div>';
+                            dropdown.classList.add('active');
+                            return;
+                        }
+                        
+                        dropdown.innerHTML = results.map((tag, index) => `
+                            <div class="tag-autocomplete-item" data-index="${index}" data-tag="${tag.name}">
+                                <span class="tag-name"><i class="fas fa-tag"></i> ${tag.name}</span>
+                                <span class="tag-count">${tag.countUses} usos</span>
+                            </div>
+                        `).join('');
+                        
+                        dropdown.classList.add('active');
+                        selectedIndex = -1;
+                        
+                        // Adicionar eventos de click
+                        dropdown.querySelectorAll('.tag-autocomplete-item').forEach(item => {
+                            item.addEventListener('click', function() {
+                                selectTag(this.dataset.tag);
+                            });
+                        });
+                    }
+                    
+                    // Função para selecionar tag
+                    function selectTag(tagName) {
+                        // Limpar input
+                        input.value = '';
+                        hideDropdown();
+                        
+                        // Adicionar tag aos parâmetros da URL (sem remover as existentes)
+                        const urlParams = new URLSearchParams(window.location.search);
+                        const existingTags = urlParams.getAll('tags');
+                        
+                        // Verificar se a tag já não foi adicionada
+                        if (!existingTags.includes(tagName)) {
+                            urlParams.append('tags', tagName);
+                        }
+                        
+                        const newUrl = window.location.pathname + '?' + urlParams.toString();
+                        window.location.href = newUrl;
+                    }
+                    
+                    // Função para esconder dropdown
+                    function hideDropdown() {
+                        dropdown.classList.remove('active');
+                        selectedIndex = -1;
+                    }
+                    
+                    // Função para navegar com teclado
+                    function navigateResults(direction) {
+                        const items = dropdown.querySelectorAll('.tag-autocomplete-item');
+                        if (items.length === 0) return;
+                        
+                        // Remover seleção anterior
+                        if (selectedIndex >= 0 && selectedIndex < items.length) {
+                            items[selectedIndex].classList.remove('selected');
+                        }
+                        
+                        // Atualizar índice
+                        if (direction === 'down') {
+                            selectedIndex = (selectedIndex + 1) % items.length;
+                        } else {
+                            selectedIndex = selectedIndex <= 0 ? items.length - 1 : selectedIndex - 1;
+                        }
+                        
+                        // Adicionar nova seleção
+                        items[selectedIndex].classList.add('selected');
+                        items[selectedIndex].scrollIntoView({ block: 'nearest' });
+                    }
+                    
+                    // Event listener para input
+                    input.addEventListener('input', function(e) {
+                        clearTimeout(debounceTimer);
+                        const query = e.target.value.trim();
+                        
+                        if (query.length === 0) {
+                            hideDropdown();
+                            return;
+                        }
+                        
+                        dropdown.innerHTML = '<div class="tag-autocomplete-loading"><i class="fas fa-spinner fa-spin"></i> Buscando...</div>';
+                        dropdown.classList.add('active');
+                        
+                        debounceTimer = setTimeout(() => {
+                            searchTags(query);
+                        }, 300);
+                    });
+                    
+                    // Event listener para teclas
+                    input.addEventListener('keydown', function(e) {
+                        const items = dropdown.querySelectorAll('.tag-autocomplete-item');
+                        
+                        if (!dropdown.classList.contains('active') || items.length === 0) {
+                            return;
+                        }
+                        
+                        switch(e.key) {
+                            case 'ArrowDown':
+                                e.preventDefault();
+                                navigateResults('down');
+                                break;
+                            case 'ArrowUp':
+                                e.preventDefault();
+                                navigateResults('up');
+                                break;
+                            case 'Enter':
+                                e.preventDefault();
+                                if (selectedIndex >= 0 && selectedIndex < items.length) {
+                                    selectTag(items[selectedIndex].dataset.tag);
+                                }
+                                break;
+                            case 'Escape':
+                                hideDropdown();
+                                break;
+                        }
+                    });
+                    
+                    // Fechar dropdown ao clicar fora
+                    document.addEventListener('click', function(e) {
+                        if (!input.contains(e.target) && !dropdown.contains(e.target)) {
+                            hideDropdown();
+                        }
+                    });
+                })();
+                </script>
+                {% endif %}
             <div class="item-grid">
                 {% for file in files %}
                 <div class="item-card" data-extension="{{ file.extension }}" data-file-url="{% if file.file %}{{ file.file.url }}{% endif %}">
@@ -88,8 +503,8 @@
             {% if files.has_other_pages %}
             <div class="pagination">
                 {% if files.has_previous %}
-                    <a href="?page=1{% if search_query %}&search={{ search_query }}{% endif %}">&laquo; Primeira</a>
-                    <a href="?page={{ files.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}">Anterior</a>
+                    <a href="?page=1{% if search_query %}&search={{ search_query }}{% endif %}{% for tag in selected_tags %}&tags={{ tag }}{% endfor %}{% if tag_operator %}&tag_operator={{ tag_operator }}{% endif %}">&laquo; Primeira</a>
+                    <a href="?page={{ files.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% for tag in selected_tags %}&tags={{ tag }}{% endfor %}{% if tag_operator %}&tag_operator={{ tag_operator }}{% endif %}">Anterior</a>
                 {% else %}
                     <span class="disabled">&laquo; Primeira</span>
                     <span class="disabled">Anterior</span>
@@ -99,13 +514,13 @@
                     {% if files.number == num %}
                         <span class="current-page">{{ num }}</span>
                     {% elif num > files.number|add:'-3' and num < files.number|add:'3' %}
-                        <a href="?page={{ num }}{% if search_query %}&search={{ search_query }}{% endif %}">{{ num }}</a>
+                        <a href="?page={{ num }}{% if search_query %}&search={{ search_query }}{% endif %}{% for tag in selected_tags %}&tags={{ tag }}{% endfor %}{% if tag_operator %}&tag_operator={{ tag_operator }}{% endif %}">{{ num }}</a>
                     {% endif %}
                 {% endfor %}
                 
                 {% if files.has_next %}
-                    <a href="?page={{ files.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}">Próxima</a>
-                    <a href="?page={{ files.paginator.num_pages }}{% if search_query %}&search={{ search_query }}{% endif %}">Última &raquo;</a>
+                    <a href="?page={{ files.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% for tag in selected_tags %}&tags={{ tag }}{% endfor %}{% if tag_operator %}&tag_operator={{ tag_operator }}{% endif %}">Próxima</a>
+                    <a href="?page={{ files.paginator.num_pages }}{% if search_query %}&search={{ search_query }}{% endif %}{% for tag in selected_tags %}&tags={{ tag }}{% endfor %}{% if tag_operator %}&tag_operator={{ tag_operator }}{% endif %}">Última &raquo;</a>
                 {% else %}
                     <span class="disabled">Próxima</span>
                     <span class="disabled">Última &raquo;</span>

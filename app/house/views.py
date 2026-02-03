@@ -384,13 +384,27 @@ def main(request):
             # Buscar por data de criação
             search_filters = Q(created_at__date=date_match)
         else:
-            # Buscar por nome do arquivo
+            # Buscar apenas por nome do arquivo
             search_filters = Q(name__icontains=search_query)
-            
-            # Buscar por tags
-            search_filters |= Q(filetag__tag__name__icontains=search_query)
         
         files_list = files_list.filter(search_filters).distinct()
+    
+    # Aplicar filtro por tags se fornecido (múltiplas tags)
+    tags_list = request.GET.getlist('tags')  # Pega lista de tags
+    tag_operator = request.GET.get('tag_operator', 'or').lower()  # 'and' ou 'or'
+    
+    if tags_list:
+        if tag_operator == 'and':
+            # AND: arquivo deve ter TODAS as tags
+            for tag_name in tags_list:
+                files_list = files_list.filter(filetag__tag__name__iexact=tag_name)
+            files_list = files_list.distinct()
+        else:
+            # OR: arquivo deve ter PELO MENOS UMA das tags
+            tag_filter = Q()
+            for tag_name in tags_list:
+                tag_filter |= Q(filetag__tag__name__iexact=tag_name)
+            files_list = files_list.filter(tag_filter).distinct()
     
     # Paginação
     page = request.GET.get('page', 1)
@@ -412,11 +426,17 @@ def main(request):
     except Configuration.DoesNotExist:
         ext_files = {}
     
+    # Buscar as 3 tags mais usadas
+    top_tags = Tag.objects.order_by('-countUses')[:3]
+    
     context = {
         'name': user.username,
         'files': files,
         'ext_files': ext_files,
         'search_query': search_query,
+        'selected_tags': tags_list,
+        'tag_operator': tag_operator,
+        'top_tags': top_tags,
     }
     return render(request, 'house/main.html', context)
 
