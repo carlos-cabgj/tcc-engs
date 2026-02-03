@@ -66,7 +66,7 @@ document.addEventListener('DOMContentLoaded', async function() {
             const userName = data.first_name || data.username || 'Usuário';
 
             // Montar a URL da imagem do perfil
-            let photoUrl = '/static/img/default-avatar.png'; // imagem padrão
+            let photoUrl = '/static/img/default-avatar.svg'; // imagem padrão
             if (profilePhoto) {
                 // Se é URL completa
                 if (profilePhoto.startsWith('http')) {

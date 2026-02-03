@@ -1,0 +1,179 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sobre - Cloud Under Roof</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="stylesheet" href="{% static 'css/header.css' %}">
+    <link rel="stylesheet" href="{% static 'css/menu.css' %}">
+    <link rel="stylesheet" href="{% static 'css/breadcrumb.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        .about-container {
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 2rem;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .about-container h1 {
+            color: #333;
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+        .about-container h1 i {
+            color: #4CAF50;
+        }
+        .about-content {
+            line-height: 1.8;
+            color: #555;
+        }
+        .about-content p {
+            margin-bottom: 1rem;
+        }
+        .about-content h2 {
+            color: #333;
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+            font-size: 1.3rem;
+        }
+        .about-content h2 i {
+            color: #4CAF50;
+        }
+        .features-list {
+            list-style: none;
+            padding-left: 0;
+        }
+        .features-list li {
+            margin-bottom: 0.8rem;
+            padding-left: 1.5rem;
+            position: relative;
+        }
+        .features-list li i {
+            color: #4CAF50;
+            position: absolute;
+            left: 0;
+            top: 3px;
+        }
+        .quote-box {
+            margin-top: 2rem;
+            padding: 1.5rem;
+            background: #f5f5f5;
+            border-radius: 6px;
+            border-left: 4px solid #4CAF50;
+        }
+        .quote-box p {
+            margin: 0;
+            font-style: italic;
+            color: #666;
+        }
+        .quote-box i {
+            color: #4CAF50;
+        }
+        .back-button {
+            margin-top: 2rem;
+            text-align: center;
+        }
+        .back-button .btn {
+            display: inline-block;
+            padding: 0.8rem 2rem;
+            background: #4CAF50;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            transition: background 0.3s;
+        }
+        .back-button .btn:hover {
+            background: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <div class="row">
+        {% include "./partials/header.html" %}
+    </div>
+    <div id="main-container" class="row">
+        <div class="container">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'main' %}"><i class="fas fa-home"></i> Início</a></li>
+                    <li class="breadcrumb-item active">Sobre</li>
+                </ol>
+            </nav>
+            <section class="content-area">
+                {% include "./partials/menu.html" %}
+            </section>
+            <main class="main-content">
+                <div class="about-container">
+                    <h1>
+                        <i class="fas fa-globe"></i> Sobre o Cloud Under Roof
+                    </h1>
+                    
+                    <div class="about-content">
+                        <p>
+                            O <strong>Cloud Under Roof</strong> é uma plataforma de armazenamento e compartilhamento de arquivos 
+                            desenvolvida para proporcionar uma solução privada e segura de nuvem pessoal.
+                        </p>
+                        
+                        <p>
+                            Nossa plataforma permite que você armazene, organize e acesse seus arquivos de qualquer lugar, 
+                            mantendo total controle sobre seus dados em sua própria infraestrutura.
+                        </p>
+                        
+                        <h2>
+                            <i class="fas fa-star"></i> Principais Recursos
+                        </h2>
+                        
+                        <ul class="features-list">
+                            <li>
+                                <i class="fas fa-check-circle"></i>
+                                <strong>Armazenamento Seguro:</strong> Seus arquivos ficam seguros em sua própria infraestrutura
+                            </li>
+                            <li>
+                                <i class="fas fa-check-circle"></i>
+                                <strong>Controle de Acesso:</strong> Defina permissões de visualização (público, usuários, privado)
+                            </li>
+                            <li>
+                                <i class="fas fa-check-circle"></i>
+                                <strong>Organização com Tags:</strong> Use tags personalizadas para organizar seus arquivos
+                            </li>
+                            <li>
+                                <i class="fas fa-check-circle"></i>
+                                <strong>Visualização de Mídia:</strong> Reproduza vídeos, áudios e visualize imagens diretamente na plataforma
+                            </li>
+                            <li>
+                                <i class="fas fa-check-circle"></i>
+                                <strong>Busca Avançada:</strong> Encontre seus arquivos rapidamente por nome, tag ou data
+                            </li>
+                            <li>
+                                <i class="fas fa-check-circle"></i>
+                                <strong>Perfil Personalizado:</strong> Gerencie suas informações e foto de perfil
+                            </li>
+                        </ul>
+                        
+                        <div class="quote-box">
+                            <p>
+                                <i class="fas fa-quote-left"></i>
+                                Mantenha seus arquivos sob seu controle, acessíveis de qualquer lugar, com a segurança de sua própria nuvem.
+                                <i class="fas fa-quote-right"></i>
+                            </p>
+                        </div>
+                        
+                        <div class="back-button">
+                            <a href="{% url 'main' %}" class="btn">
+                                <i class="fas fa-home"></i> Voltar para Início
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script src="{% static 'js/header.js' %}"></script>
+</body>
+</html>

@@ -3,9 +3,7 @@
 <!-- <aside class="sidebar"> -->
     <ul class="flex-menu">
         <li><a href="{% url 'main' %}"><i class="fas fa-book"></i> Início</a></li>
-        <li><i class="fas fa-globe"></i> Sobre</li>
-        <li><i class="fas fa-cube"></i> Serviços</li>
-        <li><i class="fas fa-phone"></i>Contato</li>
+        <li><a href="{% url 'about' %}"><i class="fas fa-globe"></i> Sobre</a></li>
         <li><a href="{% url 'upload_file' %}"><i class="fas fa-folder"></i>Novo Arquivo</a></li>
         <li><a href="{% url 'users_list' %}"><i class="fas fa-folder"></i>Usuários</a></li>
     </ul>

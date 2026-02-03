@@ -105,6 +105,12 @@ def jwt_login_required(view_func):
     return wrapper
 
 
+@jwt_login_required
+def about(request):
+    """View para a página Sobre"""
+    return render(request, 'house/about.html')
+
+
 def index(request):
     return HttpResponse("Hello 2")
 

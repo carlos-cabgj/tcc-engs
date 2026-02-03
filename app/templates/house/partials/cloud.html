@@ -64,11 +64,11 @@
                     <p>
                         <small>
                             {% if file.visibility == 'public' %}
-                                <i class="fas fa-globe"></i> Público
+                                <i class="fas fa-globe" alt="Público"></i> {{ file.user.username }}
                             {% elif file.visibility == 'users' %}
-                                <i class="fas fa-users"></i> Usuários
+                                <i class="fas fa-users" alt="Usuários"></i> {{ file.user.username }}
                             {% else %}
-                                <i class="fas fa-lock"></i> Privado
+                                <i class="fas fa-lock" alt="Privado"></i> {{ file.user.username }}
                             {% endif %}
                             | {{ file.size|filesizeformat }}
                         </small>

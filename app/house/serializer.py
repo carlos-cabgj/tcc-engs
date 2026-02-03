@@ -140,7 +140,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
                 output, 'ImageField',
                 f"{profile_photo.name.split('.')[0]}.{file_ext}",
                 mime_type,
-                sys.getsizeof(output), None
+                output.tell(), None
             )
             profile.save()
         

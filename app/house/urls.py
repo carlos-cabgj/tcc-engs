@@ -22,6 +22,7 @@ urlpatterns = [
     #path("", views.index, name="index"),
     #path("main", views.main, name="main"),
     path("", views.main, name="main"),
+    path("about", views.about, name="about"),
     path("video", views.video, name="video"),
     path("profile", views.profile_edit, name="profile_edit"),
     path("users", views.users_list, name="users_list"),
