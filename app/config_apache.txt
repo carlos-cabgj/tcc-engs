@@ -1,12 +1,40 @@
+# Configuração Apache2 para CloudUnderRoof com HTTPS
+
+## Arquivo de configuração: /etc/apache2/sites-available/cloudunderroof-ssl.conf
+
+# Redirecionar HTTP para HTTPS
 <VirtualHost *:80>
     ServerName cloudunderroof.com
+    ServerAlias 192.168.0.42
+    
+    # Redirecionar tudo para HTTPS
+    RewriteEngine On
+    RewriteCond %{HTTPS} off
+    RewriteRule ^(.*)$ https://%{HTTP_HOST}$1 [R=301,L]
+</VirtualHost>
+
+# Configuração HTTPS
+<VirtualHost *:443>
+    ServerName cloudunderroof.com
+    ServerAlias 192.168.0.42
     ServerAdmin webmaster@localhost
     DocumentRoot /tcc-engs/app
+
+    # SSL Configuration
+    SSLEngine on
+    SSLCertificateFile /etc/apache2/ssl/cloudunderroof.crt
+    SSLCertificateKeyFile /etc/apache2/ssl/cloudunderroof.key
 
     # Forçar UTF-8
     SetEnv LANG C.UTF-8
     SetEnv LC_ALL C.UTF-8
     SetEnv PYTHONIOENCODING utf-8
+
+    # Headers de segurança
+    Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains"
+    Header always set X-Frame-Options "SAMEORIGIN"
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set X-XSS-Protection "1; mode=block"
 
     Alias /static /tcc-engs/app/staticfiles
     <Directory /tcc-engs/app/staticfiles>
@@ -27,14 +55,100 @@
         </Files>
     </Directory>
 
-    WSGIDaemonProcess cloudunderroof python-home=/tcc-engs/app/.venv python-path=/tcc-engs/app/ lang=C.UTF-8 locale=C.UTF-8
-    WSGIProcessGroup cloudunderroof
+    WSGIDaemonProcess cloudunderroof-ssl python-home=/tcc-engs/app/.venv python-path=/tcc-engs/app/ lang=C.UTF-8 locale=C.UTF-8
+    WSGIProcessGroup cloudunderroof-ssl
     
     # Permitir todos os headers serem passados para o WSGI
     WSGIPassAuthorization On
     
     WSGIScriptAlias / /tcc-engs/app/cloudunderroof/wsgi.py
 
-    ErrorLog ${APACHE_LOG_DIR}/cloudunderroof_error.log
-    CustomLog ${APACHE_LOG_DIR}/cloudunderroof_access.log combined
+    ErrorLog ${APACHE_LOG_DIR}/cloudunderroof_ssl_error.log
+    CustomLog ${APACHE_LOG_DIR}/cloudunderroof_ssl_access.log combined
 </VirtualHost>
+
+## Comandos úteis:
+# Habilitar módulos necessários:
+# sudo a2enmod ssl headers rewrite
+
+# Habilitar site:
+# sudo a2ensite cloudunderroof-ssl.conf
+
+# Recarregar Apache:
+# sudo systemctl reload apache2
+
+## Certificados SSL para Rede Local
+
+### Certificado Auto-Assinado (Já instalado e configurado)
+# Os certificados estão em:
+# - Certificado: /etc/apache2/ssl/cloudunderroof.crt
+# - Chave privada: /etc/apache2/ssl/cloudunderroof.key
+# 
+# Para gerar novos certificados auto-assinados (válidos por 365 dias):
+sudo openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
+  -keyout /etc/apache2/ssl/cloudunderroof.key \
+  -out /etc/apache2/ssl/cloudunderroof.crt \
+  -subj "/C=BR/ST=State/L=City/O=CloudUnderRoof/CN=192.168.0.42"
+
+# Depois de gerar, reiniciar Apache:
+sudo systemctl restart apache2
+
+### Como aceitar o certificado nos navegadores:
+
+## Chrome/Edge:
+# 1. Acesse https://192.168.0.42
+# 2. Clique em "Avançado" ou "Advanced"
+# 3. Clique em "Continuar para 192.168.0.42 (não seguro)"
+# Opcional: Adicione exceção permanente
+
+## Firefox:
+# 1. Acesse https://192.168.0.42
+# 2. Clique em "Avançado"
+# 3. Clique em "Aceitar o Risco e Continuar"
+
+## Safari (macOS/iOS):
+# 1. Acesse https://192.168.0.42
+# 2. Clique em "Mostrar Detalhes"
+# 3. Clique em "visitar este site"
+
+### Instalar certificado como confiável (Opcional - Remove avisos):
+
+## No Windows:
+# 1. Baixe o certificado do servidor:
+#    curl -k https://192.168.0.42/media/cloudunderroof.crt -o cloudunderroof.crt
+#    ou acesse https://192.168.0.42 e exporte o certificado
+# 2. Abra o arquivo .crt
+# 3. Clique em "Instalar Certificado"
+# 4. Selecione "Computador Local"
+# 5. Selecione "Autoridades de Certificação Raiz Confiáveis"
+# 6. Finalize
+
+## No Linux:
+sudo cp /etc/apache2/ssl/cloudunderroof.crt /usr/local/share/ca-certificates/
+sudo update-ca-certificates
+
+## No macOS:
+# 1. Baixe o certificado
+# 2. Abra "Acesso às Chaves" (Keychain Access)
+# 3. Arraste o .crt para "Sistema"
+# 4. Clique duplo no certificado
+# 5. Em "Confiar", selecione "Sempre Confiar"
+
+### Acessar o site:
+# HTTP (redireciona automaticamente): http://192.168.0.42
+# HTTPS: https://192.168.0.42
+
+### IMPORTANTE - Rede Local:
+# - O certificado auto-assinado é perfeito para rede local
+# - Cada navegador/dispositivo precisará aceitar a exceção uma vez
+# - Para evitar avisos, instale o certificado em cada dispositivo
+# - Certificado válido por 365 dias, depois precisa ser renovado manualmente
+
+## Configurações Django (settings.py)
+# SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+# SECURE_SSL_REDIRECT = False  # Apache já faz o redirect
+# SESSION_COOKIE_SECURE = True
+# CSRF_COOKIE_SECURE = True
+# SECURE_BROWSER_XSS_FILTER = True
+# SECURE_CONTENT_TYPE_NOSNIFF = True
+# X_FRAME_OPTIONS = 'SAMEORIGIN'
