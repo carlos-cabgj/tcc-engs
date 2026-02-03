@@ -30,6 +30,9 @@ urlpatterns = [
     path("users/<int:user_id>/edit/", views.edit_user, name="edit_user"),
     path("upload", views.upload_file, name="upload_file"),
     path("api/upload/", views.upload_file_api, name="upload_file_api"),
+    path("edit-file/<int:file_id>/", views.edit_file, name="edit_file"),
+    path("edit-file/<int:file_id>/api/", views.edit_file_api, name="edit_file_api"),
+    path("api/file/<int:file_id>/view/", views.increment_file_view, name="increment_file_view"),
     
     # Servir arquivos de mídia com suporte a Range Requests
     re_path(r'^media/(?P<file_path>.+)$', views.serve_media_file, name='serve_media'),

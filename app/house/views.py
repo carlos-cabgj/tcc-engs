@@ -822,6 +822,136 @@ def upload_file_api(request):
         })
 
 
+def edit_file(request, file_id):
+    """Página para editar arquivo"""
+    from django.shortcuts import get_object_or_404
+    import json
+    
+    # Buscar arquivo
+    file_obj = get_object_or_404(File, id=file_id)
+    
+    # Verificar se o usuário é o dono do arquivo
+    if file_obj.user != request.user:
+        return HttpResponse('Acesso negado', status=403)
+    
+    # Obter tags do arquivo
+    file_tags = []
+    for tag in file_obj.tags.all():
+        file_tags.append({
+            'id': tag.id,
+            'name': tag.name
+        })
+    
+    context = {
+        'file': file_obj,
+        'file_tags': json.dumps(file_tags)
+    }
+    return render(request, 'house/edit_file.html', context)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def edit_file_api(request, file_id):
+    """API para processar edição de arquivo"""
+    from django.shortcuts import get_object_or_404
+    
+    try:
+        # Buscar arquivo
+        file_obj = get_object_or_404(File, id=file_id)
+        
+        # Verificar se o usuário é o dono do arquivo
+        if file_obj.user != request.user:
+            return JsonResponse({'success': False, 'error': 'Acesso negado'}, status=403)
+        
+        # Validar nome do arquivo
+        file_name = request.POST.get('file_name', '').strip()
+        if not file_name:
+            return JsonResponse({'success': False, 'error': 'Nome do arquivo não pode estar vazio'})
+        
+        # Validar visibilidade
+        visibility = request.POST.get('visibility', '').strip()
+        if visibility not in ['public', 'users', 'private']:
+            return JsonResponse({'success': False, 'error': 'Visibilidade inválida'})
+        
+        # Atualizar dados do arquivo
+        file_obj.name = file_name
+        file_obj.visibility = visibility
+        file_obj.save()
+        
+        # Atualizar tags
+        # Remover tags antigas
+        for tag in file_obj.tags.all():
+            tag.countUses = max(0, tag.countUses - 1)
+            tag.save()
+        
+        file_obj.tags.clear()
+        
+        # Adicionar novas tags
+        tag_ids = request.POST.getlist('tags')
+        if tag_ids:
+            for tag_id in tag_ids:
+                if tag_id.startswith('new_'):
+                    # Nova tag
+                    tag_name = request.POST.get(f'tag_name_{tag_id}', '').strip()
+                    if tag_name:
+                        # Verificar se já existe
+                        tag = Tag.objects.filter(name__iexact=tag_name).first()
+                        if not tag:
+                            tag = Tag.objects.create(
+                                name=tag_name,
+                                countUses=1,
+                                create_by=request.user
+                            )
+                        else:
+                            tag.countUses += 1
+                            tag.save()
+                        file_obj.tags.add(tag)
+                else:
+                    # Tag existente
+                    try:
+                        tag = Tag.objects.get(id=tag_id)
+                        file_obj.tags.add(tag)
+                        tag.countUses += 1
+                        tag.save()
+                    except Tag.DoesNotExist:
+                        pass
+        
+        return JsonResponse({
+            'success': True,
+            'message': 'Arquivo atualizado com sucesso'
+        })
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': f'Erro ao atualizar arquivo: {str(e)}'
+        })
+
+
+@api_view(['POST'])
+def increment_file_view(request, file_id):
+    """API para incrementar contador de visualizações"""
+    from django.shortcuts import get_object_or_404
+    from django.utils import timezone
+    
+    try:
+        file_obj = get_object_or_404(File, id=file_id)
+        
+        # Incrementar views_count
+        file_obj.views_count += 1
+        file_obj.viewed_at = timezone.now()
+        file_obj.save(update_fields=['views_count', 'viewed_at'])
+        
+        return JsonResponse({
+            'success': True,
+            'views_count': file_obj.views_count
+        })
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=500)
+
+
 def serve_media_file(request, file_path):
     """
     Serve arquivos de mídia com suporte a Range Requests (necessário para seeking em áudio/vídeo)

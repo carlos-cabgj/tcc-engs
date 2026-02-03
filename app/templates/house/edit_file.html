@@ -1,0 +1,639 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editar Arquivo - {{ file.name }}</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="stylesheet" href="{% static 'css/header.css' %}">
+    <link rel="stylesheet" href="{% static 'css/menu.css' %}">
+    <link rel="stylesheet" href="{% static 'css/breadcrumb.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        .upload-container {
+            max-width: 600px;
+            margin: 40px auto;
+            padding: 30px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .upload-header {
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        .upload-header h2 {
+            color: #2c3e50;
+            margin: 0;
+            font-size: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #2c3e50;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        
+        .form-group label .required {
+            color: #e74c3c;
+            margin-left: 4px;
+        }
+        
+        .text-input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #bdc3c7;
+            border-radius: 4px;
+            font-size: 14px;
+            font-family: inherit;
+            transition: border-color 0.3s;
+            box-sizing: border-box;
+        }
+        
+        .text-input:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+        }
+        
+        .select-input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #bdc3c7;
+            border-radius: 4px;
+            font-size: 14px;
+            font-family: inherit;
+            background-color: white;
+            cursor: pointer;
+            transition: border-color 0.3s;
+            box-sizing: border-box;
+        }
+        
+        .select-input:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+        }
+        
+        .btn-submit {
+            width: 100%;
+            padding: 14px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            margin-top: 10px;
+        }
+        
+        .btn-submit:hover {
+            background-color: #2980b9;
+        }
+        
+        .btn-submit:disabled {
+            background-color: #bdc3c7;
+            cursor: not-allowed;
+        }
+        
+        .error-message {
+            color: #e74c3c;
+            font-size: 13px;
+            margin-top: 6px;
+            display: none;
+        }
+        
+        .error-message.show {
+            display: block;
+        }
+        
+        .success-message {
+            padding: 12px;
+            background-color: #d5f4e6;
+            border: 1px solid #27ae60;
+            border-radius: 4px;
+            color: #27ae60;
+            margin-bottom: 20px;
+            display: none;
+        }
+        
+        .success-message.show {
+            display: block;
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            margin-top: 10px;
+        }
+        
+        .loading.show {
+            display: block;
+        }
+        
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #3498db;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            margin-right: 8px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .tags-section {
+            border-top: 2px solid #ecf0f1;
+            padding-top: 20px;
+            margin-top: 20px;
+        }
+
+        .tag-input-group {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+
+        .tag-input-group input {
+            flex: 1;
+            padding: 12px;
+            border: 1px solid #bdc3c7;
+            border-radius: 4px;
+            font-size: 14px;
+            font-family: inherit;
+            transition: border-color 0.3s;
+            box-sizing: border-box;
+        }
+
+        .tag-input-group input:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+        }
+
+        .btn-add-tag {
+            padding: 12px 20px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            white-space: nowrap;
+        }
+
+        .btn-add-tag:hover {
+            background-color: #2980b9;
+        }
+
+        .tag-suggestions {
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid #bdc3c7;
+            border-radius: 4px;
+            background-color: white;
+            display: none;
+            margin-bottom: 15px;
+        }
+
+        .tag-suggestions.show {
+            display: block;
+        }
+
+        .tag-suggestion-item {
+            padding: 10px 12px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #ecf0f1;
+        }
+
+        .tag-suggestion-item:last-child {
+            border-bottom: none;
+        }
+
+        .tag-suggestion-item:hover {
+            background-color: #ecf0f1;
+        }
+
+        .tag-suggestion-name {
+            font-weight: 500;
+            color: #2c3e50;
+        }
+
+        .tag-suggestion-count {
+            background-color: #3498db;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 12px;
+        }
+
+        .selected-tags {
+            margin-top: 15px;
+        }
+
+        .selected-tags-label {
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+
+        .tags-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            min-height: 40px;
+            padding: 10px;
+            border: 1px solid #ecf0f1;
+            border-radius: 4px;
+            background-color: #f8f9fa;
+        }
+
+        .no-tags {
+            color: #95a5a6;
+            font-style: italic;
+            font-size: 14px;
+        }
+
+        .tag-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            background-color: #3498db;
+            color: white;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .tag-item.new {
+            background-color: #27ae60;
+        }
+
+        .tag-item-remove {
+            cursor: pointer;
+            margin-left: 4px;
+            opacity: 0.8;
+            transition: opacity 0.2s;
+        }
+
+        .tag-item-remove:hover {
+            opacity: 1;
+        }
+
+        .file-info {
+            background-color: #ecf0f1;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .file-info p {
+            margin: 5px 0;
+            color: #555;
+            font-size: 14px;
+        }
+
+        .file-info strong {
+            color: #2c3e50;
+        }
+    </style>
+</head>
+<body>
+    <div class="row">
+        {% include "./partials/header.html" %}
+    </div>
+    
+    <div id="main-container" class="row">
+        <div class="container">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="/"><i class="fas fa-home"></i> Início</a></li>
+                    <li class="breadcrumb-separator">/</li>
+                    <li class="breadcrumb-item active">Editar Arquivo</li>
+                </ol>
+            </nav>
+            <section class="content-area">
+                <div class="search-bar">
+                    <input type="text" placeholder="Search">
+                    <button><i class="fas fa-search"></i></button>
+                </div>
+                {% include "./partials/menu.html" %}
+            </section>
+            
+            <main class="main-content">
+
+                <div class="upload-container">
+                    <div class="upload-header">
+                        <h2>
+                            <i class="fas fa-edit"></i>
+                            Editar Arquivo
+                        </h2>
+                    </div>
+
+                    <div class="success-message" id="successMessage"></div>
+
+                    <div class="file-info">
+                        <p><strong>Arquivo:</strong> {{ file.name }}</p>
+                        <p><strong>Tipo:</strong> {{ file.extension|upper }}</p>
+                        <p><strong>Tamanho:</strong> {{ file.size|filesizeformat }}</p>
+                        <p><strong>Criado em:</strong> {{ file.created_at|date:"d/m/Y H:i" }}</p>
+                    </div>
+
+                    <form id="editForm" method="post">
+                        {% csrf_token %}
+                        
+                        <div class="form-group">
+                            <label for="fileName">
+                                Nome do Arquivo <span class="required">*</span>
+                            </label>
+                            <input 
+                                type="text" 
+                                id="fileNameInput" 
+                                name="file_name" 
+                                class="text-input" 
+                                placeholder="Digite o nome do arquivo"
+                                value="{{ file.name }}"
+                                required
+                            >
+                            <div class="error-message" id="fileNameError"></div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="visibility">
+                                Visibilidade <span class="required">*</span>
+                            </label>
+                            <select id="visibility" name="visibility" class="select-input" required>
+                                <option value="users" {% if file.visibility == 'users' %}selected{% endif %}>Usuários</option>
+                                <option value="public" {% if file.visibility == 'public' %}selected{% endif %}>Público</option>
+                                <option value="private" {% if file.visibility == 'private' %}selected{% endif %}>Privado</option>
+                            </select>
+                            <div class="error-message" id="visibilityError"></div>
+                        </div>
+
+                        <div class="form-group tags-section">
+                            <label>
+                                <i class="fas fa-tags"></i> Tags
+                            </label>
+                            
+                            <div class="tag-input-group">
+                                <input 
+                                    type="text" 
+                                    id="tagInput" 
+                                    class="text-input" 
+                                    placeholder="Digite o nome da tag"
+                                    autocomplete="off"
+                                >
+                                <button type="button" class="btn-add-tag" id="addTagBtn">
+                                    <i class="fas fa-plus"></i> Adicionar
+                                </button>
+                            </div>
+
+                            <div class="tag-suggestions" id="tagSuggestions"></div>
+
+                            <div class="selected-tags">
+                                <div class="selected-tags-label">Tags Selecionadas:</div>
+                                <div class="tags-list" id="tagsList">
+                                    <div class="no-tags">Nenhuma tag selecionada</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <button type="submit" class="btn-submit" id="submitBtn">
+                            <i class="fas fa-save"></i> Salvar Alterações
+                        </button>
+                        
+                        <div class="loading" id="loading">
+                            <div class="spinner"></div>
+                            <span>Salvando alterações...</span>
+                        </div>
+                    </form>
+                </div>
+            </main>
+        </div>
+    </div>
+    
+    <script>
+        const fileId = {{ file.id }};
+        const fileNameInput = document.getElementById('fileNameInput');
+        const visibilitySelect = document.getElementById('visibility');
+        const editForm = document.getElementById('editForm');
+        const submitBtn = document.getElementById('submitBtn');
+        const loading = document.getElementById('loading');
+        const successMessage = document.getElementById('successMessage');
+        const tagInput = document.getElementById('tagInput');
+        const addTagBtn = document.getElementById('addTagBtn');
+        const tagSuggestions = document.getElementById('tagSuggestions');
+        const tagsList = document.getElementById('tagsList');
+
+        let selectedTags = new Map();
+        const existingTags = {{ file_tags|safe }};
+        existingTags.forEach(tag => {
+            selectedTags.set(tag.id, {
+                id: tag.id,
+                name: tag.name,
+                checked: true,
+                isNew: false
+            });
+        });
+        renderSelectedTags();
+
+        async function fetchTags(query) {
+            if (!query || query.length < 1) {
+                tagSuggestions.classList.remove('show');
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/tags/?search=${encodeURIComponent(query)}`);
+                const data = await response.json();
+                const results = data.results || data || [];
+
+                if (results.length === 0) {
+                    tagSuggestions.innerHTML = '<div style="padding: 10px; color: #95a5a6; text-align: center;">Nenhuma tag encontrada</div>';
+                } else {
+                    tagSuggestions.innerHTML = results.map(tag => `
+                        <div class="tag-suggestion-item" data-tag-id="${tag.id}" data-tag-name="${tag.name}">
+                            <span class="tag-suggestion-name"><i class="fas fa-tag"></i> ${tag.name}</span>
+                            <span class="tag-suggestion-count">${tag.countUses} usos</span>
+                        </div>
+                    `).join('');
+
+                    tagSuggestions.querySelectorAll('.tag-suggestion-item').forEach(item => {
+                        item.addEventListener('click', function() {
+                            addTag(this.dataset.tagId, this.dataset.tagName, false);
+                        });
+                    });
+                }
+
+                tagSuggestions.classList.add('show');
+            } catch (error) {
+                console.error('Erro ao buscar tags:', error);
+            }
+        }
+
+        function addTag(id, name, isNew = false) {
+            if (!selectedTags.has(id)) {
+                selectedTags.set(id, { id, name, checked: true, isNew });
+                renderSelectedTags();
+            }
+            tagInput.value = '';
+            tagSuggestions.classList.remove('show');
+        }
+
+        function removeTag(id) {
+            selectedTags.delete(id);
+            renderSelectedTags();
+        }
+
+        function renderSelectedTags() {
+            const activeTags = Array.from(selectedTags.values()).filter(tag => tag.checked);
+            
+            if (activeTags.length === 0) {
+                tagsList.innerHTML = '<div class="no-tags">Nenhuma tag selecionada</div>';
+            } else {
+                tagsList.innerHTML = activeTags.map(tag => `
+                    <div class="tag-item ${tag.isNew ? 'new' : ''}">
+                        <i class="fas fa-tag"></i>
+                        ${tag.name}
+                        ${tag.isNew ? '<span style="font-size: 11px; opacity: 0.8;">(nova)</span>' : ''}
+                        <span class="tag-item-remove" onclick="removeTag('${tag.id}')">
+                            <i class="fas fa-times"></i>
+                        </span>
+                    </div>
+                `).join('');
+            }
+        }
+
+        let debounceTimer;
+        tagInput.addEventListener('input', function(e) {
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(() => {
+                fetchTags(e.target.value.trim());
+            }, 300);
+        });
+
+        addTagBtn.addEventListener('click', function() {
+            const tagName = tagInput.value.trim();
+            if (tagName) {
+                addTag(`new_${Date.now()}`, tagName, true);
+            }
+        });
+
+        tagInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                const tagName = tagInput.value.trim();
+                if (tagName) {
+                    addTag(`new_${Date.now()}`, tagName, true);
+                }
+            }
+        });
+
+        document.addEventListener('click', function(e) {
+            if (e.target !== tagInput && !tagSuggestions.contains(e.target)) {
+                tagSuggestions.classList.remove('show');
+            }
+        });
+
+        editForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            document.querySelectorAll('.error-message').forEach(el => el.classList.remove('show'));
+            successMessage.classList.remove('show');
+            
+            let hasErrors = false;
+            
+            if (!fileNameInput.value.trim()) {
+                document.getElementById('fileNameError').textContent = 'Nome do arquivo não pode estar vazio';
+                document.getElementById('fileNameError').classList.add('show');
+                hasErrors = true;
+            }
+            
+            if (!visibilitySelect.value) {
+                document.getElementById('visibilityError').textContent = 'Selecione uma visibilidade';
+                document.getElementById('visibilityError').classList.add('show');
+                hasErrors = true;
+            }
+            
+            if (hasErrors) return;
+            
+            const activeTags = Array.from(selectedTags.values()).filter(tag => tag.checked);
+            const formData = new FormData();
+            formData.append('file_name', fileNameInput.value.trim());
+            formData.append('visibility', visibilitySelect.value);
+            
+            activeTags.forEach(tag => {
+                formData.append('tags', tag.id);
+                if (tag.isNew) {
+                    formData.append(`tag_name_${tag.id}`, tag.name);
+                }
+            });
+            
+            formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
+            
+            submitBtn.disabled = true;
+            loading.classList.add('show');
+            
+            try {
+                const response = await fetch(`/edit-file/${fileId}/api/`, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    successMessage.textContent = '✓ ' + data.message;
+                    successMessage.classList.add('show');
+                    
+                    setTimeout(() => {
+                        window.location.href = '{% url "main" %}';
+                    }, 2000);
+                } else {
+                    const errorField = data.error.toLowerCase().includes('nome') ? 'fileNameError' : 
+                                      data.error.toLowerCase().includes('visibilidade') ? 'visibilityError' :
+                                      'fileNameError';
+                    document.getElementById(errorField).textContent = data.error;
+                    document.getElementById(errorField).classList.add('show');
+                }
+            } catch (error) {
+                document.getElementById('fileNameError').textContent = 'Erro ao salvar alterações';
+                document.getElementById('fileNameError').classList.add('show');
+            } finally {
+                submitBtn.disabled = false;
+                loading.classList.remove('show');
+            }
+        });
+    </script>
+            </main>
+        </div>
+    </div>
+</body>
+</html>

@@ -3,8 +3,19 @@
     ServerAdmin webmaster@localhost
     DocumentRoot /tcc-engs/app
 
+    # Forçar UTF-8
+    SetEnv LANG C.UTF-8
+    SetEnv LC_ALL C.UTF-8
+    SetEnv PYTHONIOENCODING utf-8
+
     Alias /static /tcc-engs/app/staticfiles
     <Directory /tcc-engs/app/staticfiles>
+        Require all granted
+        Allow from all
+    </Directory>
+
+    Alias /media /tcc-engs/app/media
+    <Directory /tcc-engs/app/media>
         Require all granted
         Allow from all
     </Directory>
@@ -16,7 +27,7 @@
         </Files>
     </Directory>
 
-    WSGIDaemonProcess cloudunderroof python-home=/tcc-engs/app/.venv python-path=/tcc-engs/app/
+    WSGIDaemonProcess cloudunderroof python-home=/tcc-engs/app/.venv python-path=/tcc-engs/app/ lang=C.UTF-8 locale=C.UTF-8
     WSGIProcessGroup cloudunderroof
     
     # Permitir todos os headers serem passados para o WSGI

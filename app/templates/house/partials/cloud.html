@@ -543,7 +543,7 @@
                 {% endif %}
             <div class="item-grid">
                 {% for file in files %}
-                <div class="item-card" data-extension="{{ file.extension }}" data-file-url="{% if file.file %}{{ file.file.url }}{% endif %}">
+                <div class="item-card" data-extension="{{ file.extension }}" data-file-url="{% if file.file %}{{ file.file.url }}{% endif %}" data-file-id="{{ file.id }}">
                     {% if file.thumbnail %}
                         <img src="{{ file.thumbnail.url }}" alt="{{ file.name }}">
                     {% else %}
@@ -564,6 +564,9 @@
                     </p>
                     {% if file.user == request.user %}
                         <i class="fas check-icon" title="Seu arquivo"></i>
+                        <a href="{% url 'edit_file' file.id %}" class="edit-file-btn" onclick="event.stopPropagation();">
+                            <i class="fas fa-edit"></i> Editar
+                        </a>
                     {% endif %}
                 </div>
                 {% empty %}
