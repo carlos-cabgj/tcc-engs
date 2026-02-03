@@ -334,18 +334,28 @@ def main(request):
     is_guest = user.groups.filter(name__iexact='guest').exists()
     
     # Construir query baseado nas permissões
-    if is_admin or is_users_group:
-        # Admin e Users: todos não privados + privados próprios
+    if is_admin:
+        # Admin: vê públicos + users + todos os seus próprios (de qualquer visibilidade)
         files_list = File.objects.filter(
-            Q(visibility__in=['public', 'users']) | Q(user=user, visibility='private')
+            Q(visibility='public') | 
+            Q(visibility='users') | 
+            Q(user=user)
+        ).order_by('-created_at')
+    elif is_users_group:
+        # Users: vê públicos + users + todos os seus próprios (de qualquer visibilidade)
+        files_list = File.objects.filter(
+            Q(visibility='public') | 
+            Q(visibility='users') | 
+            Q(user=user)
         ).order_by('-created_at')
     elif is_guest:
-        # Guest: apenas públicos + privados próprios
+        # Guest: vê apenas públicos + todos os seus próprios (de qualquer visibilidade)
         files_list = File.objects.filter(
-            Q(visibility='public') | Q(user=user, visibility='private')
+            Q(visibility='public') | 
+            Q(user=user)
         ).order_by('-created_at')
     else:
-        # Usuário sem grupo: apenas próprios arquivos
+        # Usuário sem grupo: vê apenas seus próprios arquivos
         files_list = File.objects.filter(user=user).order_by('-created_at')
     
     # Aplicar busca se fornecido termo de busca
