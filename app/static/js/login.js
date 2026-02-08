@@ -158,9 +158,9 @@ document.addEventListener('DOMContentLoaded', function() {
         return null;
     };
 
-    // Verificar se já está logado
-    const token = getCookie('access_token') || localStorage.getItem('access_token');
-    if (token) {
-        window.location.href = '/';
-    }
+    // Verificação de login automático desabilitada
+    // const token = getCookie('access_token') || localStorage.getItem('access_token');
+    // if (token) {
+    //     window.location.href = '/';
+    // }
 });

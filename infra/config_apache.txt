@@ -1,32 +1,63 @@
-<VirtualHost *:8000>
+# Redirecionar HTTP para HTTPS
+<VirtualHost *:80>
+    ServerName cloudunderroof.com
+    ServerAlias 192.168.0.42
+    
+    # Redirecionar tudo para HTTPS
+    RewriteEngine On
+    RewriteCond %{HTTPS} off
+    RewriteRule ^(.*)$ https://%{HTTP_HOST}$1 [R=301,L]
+</VirtualHost>
+
+<VirtualHost *:443>
+    ServerName cloudunderroof.com
+    ServerAlias 192.168.0.42
     ServerAdmin webmaster@localhost
-    DocumentRoot /app
+    DocumentRoot /tcc-engs/app
 
-    Header always set Cache-Control "no-cache, no-store, must-revalidate"
-    Header always set Pragma "no-cache"
-    Header always set Expires "0"
+    # SSL Configuration
+    SSLEngine on
+    SSLCertificateFile /etc/apache2/ssl/cloudunderroof.crt
+    SSLCertificateKeyFile /etc/apache2/ssl/cloudunderroof.key
 
-    Alias /static /app/static
-    <Directory /app/static>
+    # Forçar UTF-8
+    SetEnv LANG C.UTF-8
+    SetEnv LC_ALL C.UTF-8
+    SetEnv PYTHONIOENCODING utf-8
+
+    # Headers de segurança
+    Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains"
+    Header always set X-Frame-Options "SAMEORIGIN"
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set X-XSS-Protection "1; mode=block"
+
+    Alias /static /tcc-engs/app/staticfiles
+    <Directory /tcc-engs/app/staticfiles>
         Require all granted
         Allow from all
     </Directory>
 
-    <Directory /app/cloudunderroof>
+    Alias /media /tcc-engs/app/media
+    <Directory /tcc-engs/app/media>
+        Require all granted
+        Allow from all
+    </Directory>
+
+    <Directory /tcc-engs/app/cloudunderroof>
         <Files wsgi.py>
             Require all granted
             Allow from all
         </Files>
     </Directory>
 
-    #WSGIDaemonProcess cloudunderroof python-path=/usr/local python-home=/usr/local/
-    WSGIDaemonProcess cloudunderroof \
-        python-path=/app:/usr/local/lib/python3.13/site-packages \
-        processes=2 threads=5
+    WSGIDaemonProcess cloudunderroof-ssl python-home=/tcc-engs/app/.venv python-path=/tcc-engs/app/ lang=C.UTF-8 locale=C.UTF-8
+    WSGIProcessGroup cloudunderroof-ssl
+    
+    # Permitir todos os headers serem passados para o WSGI
+    WSGIPassAuthorization On
+    
+    WSGIScriptAlias / /tcc-engs/app/cloudunderroof/wsgi.py
 
-    WSGIProcessGroup cloudunderroof
-    WSGIScriptAlias / /app/cloudunderroof/wsgi.py
-
-    ErrorLog ${APACHE_LOG_DIR}/cloudunderroof_error.log
-    CustomLog ${APACHE_LOG_DIR}/cloudunderroof_access.log combined
+    ErrorLog ${APACHE_LOG_DIR}/cloudunderroof_ssl_error.log
+    CustomLog ${APACHE_LOG_DIR}/cloudunderroof_ssl_access.log combined
 </VirtualHost>
