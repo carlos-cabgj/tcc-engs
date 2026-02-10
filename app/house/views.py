@@ -1,5 +1,6 @@
 import os
 import io
+import sys
 from django.http import HttpResponse, FileResponse, JsonResponse
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
@@ -408,7 +409,15 @@ def main(request):
     
     # Paginação
     page = request.GET.get('page', 1)
-    items_per_page = request.GET.get('per_page', 12)  # 12 itens por padrão
+    
+    # Obter número de itens por página (15, 30 ou 45)
+    try:
+        items_per_page = int(request.GET.get('per_page', 15))
+        # Validar que seja um dos valores permitidos
+        if items_per_page not in [15, 30, 45]:
+            items_per_page = 15
+    except (ValueError, TypeError):
+        items_per_page = 15
     
     paginator = Paginator(files_list, items_per_page)
     
@@ -437,6 +446,7 @@ def main(request):
         'selected_tags': tags_list,
         'tag_operator': tag_operator,
         'top_tags': top_tags,
+        'items_per_page': items_per_page,
     }
     return render(request, 'house/main.html', context)
 

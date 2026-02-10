@@ -478,6 +478,43 @@ body {
     color: #ccc;
 }
 
+/* Estilos para seletor de itens por página */
+.pagination-controls {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 10px;
+    margin: 20px 0 15px;
+    padding: 0 10px;
+}
+
+.pagination-controls label {
+    font-size: 0.95rem;
+    color: #555;
+    font-weight: 500;
+}
+
+.pagination-controls select {
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    background-color: white;
+    color: #333;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    outline: none;
+}
+
+.pagination-controls select:hover {
+    border-color: #007bff;
+}
+
+.pagination-controls select:focus {
+    border-color: #007bff;
+    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+}
+
 /* Responsividade para Mobile */
 @media (max-width: 768px) {
     /* Container principal */
@@ -521,6 +558,22 @@ body {
     
     .item-card p {
         font-size: 0.8em;
+    }
+    
+    /* Controles de paginação responsivos */
+    .pagination-controls {
+        justify-content: center;
+        flex-wrap: wrap;
+        margin: 15px 0 10px;
+    }
+    
+    .pagination-controls label {
+        font-size: 0.85rem;
+    }
+    
+    .pagination-controls select {
+        font-size: 0.85rem;
+        padding: 6px 10px;
     }
     
     /* Barra de pesquisa */
