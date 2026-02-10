@@ -1,10 +1,17 @@
-
 #!/bin/bash
 set -e
 
 # 1. Clonar a branch main do repositório em /opt/
 cd /opt/
 git clone -b main https://github.com/carlos-cabgj/cloudunderroof.git cloudunderroof
+
+apt-get update
+apt-get install -y apache2 apache2-dev
+
+# Instalar PostgreSQL
+sudo apt install -y libpq-dev postgresql postgresql-contrib
+sudo apt-get install -y libapache2-mod-wsgi-py3
+
 
 # 2. Criar venv no projeto
 cd /opt/cloudunderroof
@@ -21,11 +28,6 @@ pip install -r /opt/cloudunderroof/infra/requirements.txt
 #!/bin/bash
 set -e
 
-# Atualizar pacotes
-sudo apt update
-
-# Instalar PostgreSQL 15
-sudo apt install -y postgresql-15
 
 # Garantir que o serviço esteja rodando
 sudo systemctl enable postgresql
@@ -44,6 +46,8 @@ GRANT ALL PRIVILEGES ON DATABASE cloudDB TO cloudUser;
 EOF
 
 echo "PostgreSQL 15 instalado, usuário 'cloudUser' criado e banco 'cloudDB' configurado com sucesso!"
+
+sudo mkdir -p /etc/apache2/ssl
 
 sudo openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
  -keyout /etc/apache2/ssl/cloudunderroof.key \
@@ -66,16 +70,28 @@ cp "$SOURCE_FILE" "$DEST_FILE"
 echo "Arquivo .env criado a partir de .env_template em $APP_DIR"
 
 
-# 5. Substituir termos no arquivo de configuração do Apache
-sed -i 's#/tcc-engs/app/#/opt/cloudunderroof#g' /opt/cloudunderroof/infra/config_apache.txt
-
-# 6. Copiar arquivo para sites-available do Apache
+# 5. Copiar arquivo para sites-available do Apache
 sudo cp /opt/cloudunderroof/infra/config_apache.txt /etc/apache2/sites-available/cloudunderroof.conf
+
+# 6. Substituir termos no arquivo de configuração do Apache
+sed -i 's#/tcc-engs/app#/opt/cloudunderroof#g' /etc/apache2/sites-available/cloudunderroof.conf
+
 
 # 7. Habilitar o site no Apache
 sudo a2ensite cloudunderroof.conf
 
+sudo a2dissite 000-default.conf
+sudo a2dissite default-ssl.conf
+
+sudo rm /etc/apache2/sites-available/000-default.conf
+sudo rm /etc/apache2/sites-available/default-ssl.conf
+
 # 8. Reiniciar o Apache
+sudo a2enmod rewrite
+sudo a2enmod ssl
+sudo a2enmod headers
+sudo a2enmod wsgi
+
 sudo systemctl restart apache2
 
 echo "Deploy concluído com sucesso!"
