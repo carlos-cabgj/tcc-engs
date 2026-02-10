@@ -14,7 +14,7 @@ sudo apt-get install -y libapache2-mod-wsgi-py3
 
 
 # 2. Criar venv no projeto
-cd /opt/cloudunderroof
+cd /opt/cloudunderroof/app
 python3 -m venv venv
 
 # 3. Ativar venv
@@ -74,7 +74,7 @@ echo "Arquivo .env criado a partir de .env_template em $APP_DIR"
 sudo cp /opt/cloudunderroof/infra/config_apache.txt /etc/apache2/sites-available/cloudunderroof.conf
 
 # 6. Substituir termos no arquivo de configuração do Apache
-sed -i 's#/tcc-engs/app#/opt/cloudunderroof#g' /etc/apache2/sites-available/cloudunderroof.conf
+sed -i 's#/tcc-engs/app#/opt/cloudunderroof/app#g' /etc/apache2/sites-available/cloudunderroof.conf
 
 
 # 7. Habilitar o site no Apache
