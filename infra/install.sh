@@ -1,5 +1,3 @@
-quero um script shell que clone a branch main desse repositório em /opt/, crie um venv no projeto, ative o venv, e instale no venv todos os picoted do requirements.txt. Após isso substitua no arquivo /opt/cloudunderroof/infra/config_apache.txt todos os termos /tcc-engs/app/  para /opt/cloudunderroof. Após utilize o arquivo para adiconar o site no apache e depois habilitar o site. Restarte o apache depois do processo
-quero um script shell que clone a branch main desse repositório em /opt/, crie um venv no projeto, ative o venv, e instale no venv todos os picoted do requirements.txt. Após isso substitua no arquivo /opt/cloudunderroof/infra/config_apache.txt todos os termos /tcc-engs/app/  para /opt/cloudunderroof. Após utilize o arquivo para adiconar o site no apache e depois habilitar o site. Restarte o apache depois do processo
 
 #!/bin/bash
 set -e
