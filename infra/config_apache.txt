@@ -1,63 +1,97 @@
-# Redirecionar HTTP para HTTPS
-<VirtualHost *:80>
-    ServerName cloudunderroof.com
-    ServerAlias 192.168.0.42
-    
-    # Redirecionar tudo para HTTPS
-    RewriteEngine On
-    RewriteCond %{HTTPS} off
-    RewriteRule ^(.*)$ https://%{HTTP_HOST}$1 [R=301,L]
-</VirtualHost>
+#!/bin/bash
+set -e
 
-<VirtualHost *:443>
-    ServerName cloudunderroof.com
-    ServerAlias 192.168.0.42
-    ServerAdmin webmaster@localhost
-    DocumentRoot /tcc-engs/app
+# 1. Clonar a branch main do repositório em /opt/
+cd /opt/
+git clone -b main https://github.com/carlos-cabgj/cloudunderroof.git cloudunderroof
 
-    # SSL Configuration
-    SSLEngine on
-    SSLCertificateFile /etc/apache2/ssl/cloudunderroof.crt
-    SSLCertificateKeyFile /etc/apache2/ssl/cloudunderroof.key
+apt-get update
+apt-get install -y apache2 apache2-dev
 
-    # Forçar UTF-8
-    SetEnv LANG C.UTF-8
-    SetEnv LC_ALL C.UTF-8
-    SetEnv PYTHONIOENCODING utf-8
+# Instalar PostgreSQL
+sudo apt install -y libpq-dev postgresql postgresql-contrib
+sudo apt-get install -y libapache2-mod-wsgi-py3
 
-    # Headers de segurança
-    Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains"
-    Header always set X-Frame-Options "SAMEORIGIN"
-    Header always set X-Content-Type-Options "nosniff"
-    Header always set X-XSS-Protection "1; mode=block"
 
-    Alias /static /tcc-engs/app/staticfiles
-    <Directory /tcc-engs/app/staticfiles>
-        Require all granted
-        Allow from all
-    </Directory>
+# 2. Criar venv no projeto
+cd /opt/cloudunderroof
+python3 -m venv venv
 
-    Alias /media /tcc-engs/app/media
-    <Directory /tcc-engs/app/media>
-        Require all granted
-        Allow from all
-    </Directory>
+# 3. Ativar venv
+source venv/bin/activate
 
-    <Directory /tcc-engs/app/cloudunderroof>
-        <Files wsgi.py>
-            Require all granted
-            Allow from all
-        </Files>
-    </Directory>
+# 4. Instalar pacotes do requirements.txt
+pip install --upgrade pip
+pip install -r /opt/cloudunderroof/infra/requirements.txt
 
-    WSGIDaemonProcess cloudunderroof-ssl python-home=/tcc-engs/app/.venv python-path=/tcc-engs/app/ lang=C.UTF-8 locale=C.UTF-8
-    WSGIProcessGroup cloudunderroof-ssl
-    
-    # Permitir todos os headers serem passados para o WSGI
-    WSGIPassAuthorization On
-    
-    WSGIScriptAlias / /tcc-engs/app/cloudunderroof/wsgi.py
 
-    ErrorLog ${APACHE_LOG_DIR}/cloudunderroof_ssl_error.log
-    CustomLog ${APACHE_LOG_DIR}/cloudunderroof_ssl_access.log combined
-</VirtualHost>
+#!/bin/bash
+set -e
+
+
+# Garantir que o serviço esteja rodando
+sudo systemctl enable postgresql
+sudo systemctl start postgresql
+
+# Criar usuário e banco de dados
+sudo -u postgres psql <<EOF
+-- Criar usuário com senha
+CREATE USER cloudUser WITH PASSWORD 'passToChange';
+
+-- Criar banco de dados associado ao usuário
+CREATE DATABASE cloudDB OWNER cloudUser;
+
+-- Garantir privilégios
+GRANT ALL PRIVILEGES ON DATABASE cloudDB TO cloudUser;
+EOF
+
+echo "PostgreSQL 15 instalado, usuário 'cloudUser' criado e banco 'cloudDB' configurado com sucesso!"
+
+sudo mkdir -p /etc/apache2/ssl
+
+sudo openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
+ -keyout /etc/apache2/ssl/cloudunderroof.key \
+ -out /etc/apache2/ssl/cloudunderroof.crt \
+ -subj "/C=BR/ST=State/L=City/O=CloudUnderRoof/CN=192.168.0.42"
+
+#!/bin/bash
+set -e
+
+# Caminho base do projeto
+APP_DIR="/opt/cloudunderroof/app"
+
+# Arquivo de origem e destino
+SOURCE_FILE="$APP_DIR/.env_template"
+DEST_FILE="$APP_DIR/.env"
+
+# Copiar o arquivo
+cp "$SOURCE_FILE" "$DEST_FILE"
+
+echo "Arquivo .env criado a partir de .env_template em $APP_DIR"
+
+
+# 5. Copiar arquivo para sites-available do Apache
+sudo cp /opt/cloudunderroof/infra/config_apache.txt /etc/apache2/sites-available/cloudunderroof.conf
+
+# 6. Substituir termos no arquivo de configuração do Apache
+sed -i 's#/tcc-engs/app#/opt/cloudunderroof#g' /etc/apache2/sites-available/cloudunderroof.conf
+
+
+# 7. Habilitar o site no Apache
+sudo a2ensite cloudunderroof.conf
+
+sudo a2dissite 000-default.conf
+sudo a2dissite default-ssl.conf
+
+sudo rm /etc/apache2/sites-available/000-default.conf
+sudo rm /etc/apache2/sites-available/default-ssl.conf
+
+# 8. Reiniciar o Apache
+sudo a2enmod rewrite
+sudo a2enmod ssl
+sudo a2enmod headers
+sudo a2enmod wsgi
+
+sudo systemctl restart apache2
+
+echo "Deploy concluído com sucesso!"
